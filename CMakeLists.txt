@@ -2,14 +2,13 @@
 file(GLOB header *.h)
 file(GLOB source *.cpp)
 
-add_executable(StabilizedHdiv ${source} ${headers})
-
-target_link_libraries(StabilizedHdiv pz)
-
-
 cmake_minimum_required (VERSION 2.8.0)
 
 project (StabilizedHdiv)
+set(common_SRC
+main.cpp
+main_cilamce14.cpp
+)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -120,6 +119,10 @@ if(WIN32)
 
 endif()
 
-#set(CONF_INCLUDE_DIRS "." "StabilizedHdiv")
+set(StabilizedHdiv++SRC ${header} ${source})
+
+add_executable(StabilizedHdiv ${common_SRC} main.cpp)
+
+target_link_libraries(StabilizedHdiv pz)
 
 

@@ -254,66 +254,66 @@ TPZGeoMesh *GMesh(bool triang_elements, REAL Lx, REAL Ly){
 	//indice dos elementos
 	id = 0;
     
-    if(triang_elements==true)
-    {
-        TopolTriang[0] = 0;
-        TopolTriang[1] = 1;
-        TopolTriang[2] = 3;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoTriangle > (id,TopolTriang,matId,*gmesh);
-        id++;
-        
-        TopolTriang[0] = 2;
-        TopolTriang[1] = 1;
-        TopolTriang[2] = 3;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoTriangle> (id,TopolTriang,matId,*gmesh);
-        id++;
-        
-        TopolLine[0] = 0;
-        TopolLine[1] = 1;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc0,*gmesh);
-        id++;
-        
-        TopolLine[0] = 2;
-        TopolLine[1] = 1;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc1,*gmesh);
-        id++;
-        
-        TopolLine[0] = 3;
-        TopolLine[1] = 2;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc2,*gmesh);
-        id++;
-        
-        TopolLine[0] = 3;
-        TopolLine[1] = 0;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc3,*gmesh);
-    }
-    else{
-        TopolQuad[0] = 0;
-        TopolQuad[1] = 1;
-        TopolQuad[2] = 2;
-        TopolQuad[3] = 3;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoQuad> (id,TopolQuad,matId,*gmesh);
-        id++;
-        
-        TopolLine[0] = 0;
-        TopolLine[1] = 1;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc0,*gmesh);
-        id++;
-        
-        TopolLine[0] = 1;
-        TopolLine[1] = 2;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc1,*gmesh);
-        id++;
-        
-        TopolLine[0] = 2;
-        TopolLine[1] = 3;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc2,*gmesh);
-        id++;
-        
-        TopolLine[0] = 3;
-        TopolLine[1] = 0;
-        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc3,*gmesh);
-    }
+//    if(triang_elements==true)
+//    {
+//        TopolTriang[0] = 0;
+//        TopolTriang[1] = 1;
+//        TopolTriang[2] = 3;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoTriangle > (id,TopolTriang,matId,*gmesh);
+//        id++;
+//
+//        TopolTriang[0] = 2;
+//        TopolTriang[1] = 1;
+//        TopolTriang[2] = 3;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoTriangle> (id,TopolTriang,matId,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 0;
+//        TopolLine[1] = 1;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc0,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 2;
+//        TopolLine[1] = 1;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc1,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 3;
+//        TopolLine[1] = 2;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc2,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 3;
+//        TopolLine[1] = 0;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc3,*gmesh);
+//    }
+//    else{
+//        TopolQuad[0] = 0;
+//        TopolQuad[1] = 1;
+//        TopolQuad[2] = 2;
+//        TopolQuad[3] = 3;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoQuad> (id,TopolQuad,matId,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 0;
+//        TopolLine[1] = 1;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc0,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 1;
+//        TopolLine[1] = 2;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc1,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 2;
+//        TopolLine[1] = 3;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc2,*gmesh);
+//        id++;
+//
+//        TopolLine[0] = 3;
+//        TopolLine[1] = 0;
+//        new TPZGeoElRefPattern< pzgeom::TPZGeoLinear > (id,TopolLine,bc3,*gmesh);
+//    }
     
 	gmesh->BuildConnectivity();
     
@@ -372,12 +372,12 @@ TPZCompMesh *CMeshFlux(TPZGeoMesh *gmesh, int pOrder)
     cmesh->InsertMaterialObject(mat);
 	
 
-    if(isFullHdiv){
-        cmesh->SetAllCreateFunctionsHDivFull();
-    }
-    else{
+//    if(isFullHdiv){
+//        cmesh->SetAllCreateFunctionsHDivFull();
+//    }
+    //else{
 		cmesh->SetAllCreateFunctionsHDiv();
-    }
+   // }
 	
     cmesh->InsertMaterialObject(BCond0);
     cmesh->InsertMaterialObject(BCond1);
@@ -521,14 +521,14 @@ TPZCompMesh *CMeshMixed(TPZGeoMesh * gmesh, TPZVec<TPZCompMesh *> meshvec){
     
     //solucao exata
     TPZAutoPointer<TPZFunction<STATE> > solexata;
-    solexata = new TPZDummyFunction<STATE>(SolExata);
-    material->SetForcingFunctionExact(solexata);
+    //solexata = new TPZDummyFunction<STATE>(SolExata);
+    //material->SetForcingFunctionExact(solexata);
     
     //funcao do lado direito da equacao do problema
     TPZAutoPointer<TPZFunction<STATE> > forcef;
-    TPZDummyFunction<STATE> *dum = new TPZDummyFunction<STATE>(Forcing);
-    dum->SetPolynomialOrder(20);
-    forcef = dum;
+   // TPZDummyFunction<STATE> *dum = new TPZDummyFunction<STATE>(Forcing);
+   // dum->SetPolynomialOrder(20);
+   // forcef = dum;
     material->SetForcingFunction(forcef);
     
     //inserindo o material na malha computacional
