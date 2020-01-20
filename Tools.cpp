@@ -6,6 +6,7 @@
 //
 
 #include "Tools.h"
+#include "pzgengrid.h"
 
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("pz.hdiv"));
@@ -1327,3 +1328,24 @@ void NEquationsCondensed(TPZCompMesh *cmesh, long &neqglob,long &neqcond, bool i
     }
 }
 
+TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids) {
+    
+    TPZManVector<int> nx(2,nel);
+    TPZManVector<REAL> x0(3,0.),x1(3,1.);
+    x1[2] = 0.;
+    TPZGenGrid gen(nx,x0,x1);
+    gen.SetRefpatternElements(true);
+    TPZGeoMesh* gmesh = new TPZGeoMesh;
+    gen.Read(gmesh);
+    gen.SetBC(gmesh, 4, bcids[0]);
+    gen.SetBC(gmesh, 5, bcids[1]);
+    gen.SetBC(gmesh, 6, bcids[2]);
+    gen.SetBC(gmesh, 7, bcids[3]);
+    
+  //  UniformRefinement(1, gmesh);
+
+    
+    
+
+    return gmesh;
+}

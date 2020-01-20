@@ -107,3 +107,4 @@ void ComputePressureError(TPZCompMesh *cmesh, std::ostream &out);
 TPZFMatrix<STATE> * ComputeInverse(TPZCompMesh * mphysics);
 
 void NEquationsCondensed(TPZCompMesh *cmesh, long &neqglob,long &neqcond, bool ismisto);
+TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids);
