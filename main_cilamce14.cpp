@@ -64,7 +64,7 @@ using namespace std;
 //bool IsFullHdiv2 = true;
 //bool IsHomogeneo2 = false;
 
-
+bool trapezoidalmesh = false;
 
 
 //#ifdef LOG4CXX
@@ -106,20 +106,30 @@ int main(int argc, char *argv[])
             
             TPZGeoMesh *gmesh;
            
-            //gmesh = CreateGeoMesh(1);
-            gmesh = CreateTrapezoidalMesh(ndiv, ndiv, 1.,1.);
-            ofstream arg("gmesh1.txt");
-            gmesh->Print(arg);
+            if(trapezoidalmesh)
             {
-                std::ofstream file("GMesh.vtk");
+                gmesh = CreateTrapezoidalMesh(ndiv, ndiv, 1.,1.);
+                
+                ofstream arg("gmesh_trapez.txt");
+                gmesh->Print(arg);
+                
+                std::ofstream file("GMeshTrapez.vtk");
+                TPZVTKGeoMesh::PrintGMeshVTK(gmesh, file);
+            }
+            else
+            {
+                gmesh = CreateGeoMesh(1);
+                ofstream arg("gmesh1.txt");
+                gmesh->Print(arg);
+                {
+                    std::ofstream file("GMesh.vtk");
+                    TPZVTKGeoMesh::PrintGMeshVTK(gmesh, file);
+                }
+                RefinamentoUnif(gmesh, ndiv);
+                std::ofstream file("GMeshAposRef.vtk");
                 TPZVTKGeoMesh::PrintGMeshVTK(gmesh, file);
             }
             
-//            RefinamentoUnif(gmesh, ndiv-1);
-//            {
-//                std::ofstream file("GMeshAposRef.vtk");
-//                TPZVTKGeoMesh::PrintGMeshVTK(gmesh, file);
-//            }
             TPZCompMesh *cmesh1 = CMeshFlux(pq,gmesh);
             ofstream arg1("cmesh_flux.txt");
             cmesh1->Print(arg1);
