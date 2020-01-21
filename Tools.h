@@ -48,22 +48,25 @@
 //
 #include "pzlog.h"
 //
-#include "pzhdivfull.h"
+
 #include "pzaxestools.h"
 #include "TPZCopySolve.h"
 #include "pzstrmatrix.h"
 
 
 #endif /* Tools_hpp */
+
 //meio homogeneo
+TPZGeoMesh *CreateGeoMesh(int nel);
+TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly);
 TPZGeoMesh *GMesh2(REAL Lx, REAL Ly,bool triang_elements);
 
 //meio heterogeneo
 TPZGeoMesh *GMesh3(bool triang_elements);
 
-TPZCompMesh *CMeshFlux2(int pOrder, TPZGeoMesh *gmesh);
-TPZCompMesh *CMeshPressure2(int pOrder,TPZGeoMesh *gmesh);
-TPZCompMesh *CMeshMixed2(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh);
+TPZCompMesh *CMeshFlux(int pOrder, TPZGeoMesh *gmesh);
+TPZCompMesh *CMeshPressure(int pOrder,TPZGeoMesh *gmesh);
+TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh);
 
 void RefinamentoUnif(TPZGeoMesh* gmesh, int nDiv);
 void ResolverSistema(TPZAnalysis &an, TPZCompMesh *fCmesh, int numthreads, bool direct);
@@ -95,8 +98,6 @@ void DirichletXIgualMenosUm(const TPZVec<REAL> &pt, TPZVec<STATE> &disp);
 void DirichletXIgualUm(const TPZVec<REAL> &pt, TPZVec<STATE> &disp);
 void PermeabilityTensor(const TPZVec<REAL> &pt, TPZVec<STATE> &kabs, TPZFMatrix<STATE> &tensorK);
 
-
-
 //erros
 void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out);
 void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out);
@@ -107,4 +108,3 @@ void ComputePressureError(TPZCompMesh *cmesh, std::ostream &out);
 TPZFMatrix<STATE> * ComputeInverse(TPZCompMesh * mphysics);
 
 void NEquationsCondensed(TPZCompMesh *cmesh, long &neqglob,long &neqcond, bool ismisto);
-TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids);

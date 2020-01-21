@@ -8,6 +8,10 @@ project (StabilizedHdiv)
 set(common_SRC
 main.cpp
 main_cilamce14.cpp
+TPZMixedStabilizedHdiv.cpp
+TPZMixedStabilizedHdiv.h
+Tools.h
+Tools.cpp
 )
 
 set(CMAKE_CXX_STANDARD 11)
