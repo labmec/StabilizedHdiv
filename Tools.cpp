@@ -9,6 +9,7 @@
 #include "pzgengrid.h"
 #include "TPZAnalyticSolution.h"
 #include "TPZMixedStabilizedHdiv.h"
+#include "TPZCompMeshTools.h"
 
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("pz.hdiv"));
@@ -687,6 +688,14 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config){//(
     TPZBuildMultiphysicsMesh::AddElements(meshvec, mphysics);
     TPZBuildMultiphysicsMesh::AddConnects(meshvec,mphysics);
     TPZBuildMultiphysicsMesh::TransferFromMeshes(meshvec, mphysics);
+    
+    //Condesed
+//    TPZCompMeshTools::GroupElements(mphysics);
+//    bool keepmatrix = false;
+//    bool keeponelagrangian = true;
+//    TPZCompMeshTools::CreatedCondensedElements(mphysics, keeponelagrangian, keepmatrix);
+//    mphysics->CleanUpUnconnectedNodes();
+//    mphysics->ExpandSolution();
     
     return mphysics;
 }

@@ -53,6 +53,8 @@
 
 #include "Tools.h"
 #include "ProblemConfig.h"
+#include "TPZAnalyticSolution.h"
+
 using namespace std;
 
 //REAL const pi = 4.*atan(1.);
@@ -99,7 +101,7 @@ int main(int argc, char *argv[])
     config.Iscontinuouspressure = true;
 
     
-    for(int p = 1; p<3; p++)
+    for(int p = 1; p<2; p++)
     {
         config.porder = p;
         config.orderp = p;
@@ -108,7 +110,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-        for (int ndiv = 2; ndiv < 3; ndiv++)
+        for (int ndiv = 2; ndiv < 5; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -172,21 +174,22 @@ int main(int argc, char *argv[])
 
             saidaerro << "Number of equations of flux " << cmesh1->NEquations() << std::endl;
             saidaerro << "Number of equations of pressure " << cmesh2->NEquations() << std::endl;
-            saidaerro << "Number of equations TOTAL " << mphysics->NEquations() << "\n\n";
+            saidaerro << "Number of equations TOTAL " << cmesh1->NEquations()+cmesh2->NEquations()<<std::endl;
+            saidaerro << "Number of equations CONDENSADAS " << mphysics->NEquations() << "\n\n";
 
-            long neq_flux, neq_pres, neqcond_flux, neqcond_pres;
-           // NEquationsCondensed(cmesh1, neq_flux, neqcond_flux);
-//            NEquationsCondensed(cmesh2, neq_pres, neqcond_pres);
-            saidaerro << "Number of equations total flux: " <<neq_flux<< "\n";
-            saidaerro << "Number of equations condensadas flux: " <<neqcond_flux<< "\n";
-            saidaerro << "Number of equations total pressao: " <<neq_pres<< "\n";
-            saidaerro << "Number of equations condensadas pressao: " << neqcond_pres<< "\n\n";
-
-            long neq_misto, neqcond_misto;
-            NEquationsCondensed(mphysics, neq_misto, neqcond_misto,true);
-            saidaerro << "Numero total de equacoes: " <<neq_misto<< "\n";
-            saidaerro << "Numero de equacoes condensaveis: " <<neqcond_misto<< "\n";
-            saidaerro << "Numero de equacoes final: " << neq_misto - neqcond_misto<< "\n\n";
+//            long neq_flux, neq_pres, neqcond_flux, neqcond_pres;
+//           // NEquationsCondensed(cmesh1, neq_flux, neqcond_flux);
+////            NEquationsCondensed(cmesh2, neq_pres, neqcond_pres);
+//            saidaerro << "Number of equations total flux: " <<neq_flux<< "\n";
+//            saidaerro << "Number of equations condensadas flux: " <<neqcond_flux<< "\n";
+//            saidaerro << "Number of equations total pressao: " <<neq_pres<< "\n";
+//            saidaerro << "Number of equations condensadas pressao: " << neqcond_pres<< "\n\n";
+//
+//            long neq_misto, neqcond_misto;
+//            NEquationsCondensed(mphysics, neq_misto, neqcond_misto,true);
+//            saidaerro << "Numero total de equacoes: " <<neq_misto<< "\n";
+//            saidaerro << "Numero de equacoes condensaveis: " <<neqcond_misto<< "\n";
+//            saidaerro << "Numero de equacoes final: " << neq_misto - neqcond_misto<< "\n\n";
 
             int numthreads = 8;
             std::cout << "Number of threads " << numthreads << std::endl;
