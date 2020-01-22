@@ -6,7 +6,6 @@ cmake_minimum_required (VERSION 2.8.0)
 
 project (StabilizedHdiv)
 set(common_SRC
-main.cpp
 main_cilamce14.cpp
 TPZMixedStabilizedHdiv.cpp
 TPZMixedStabilizedHdiv.h
@@ -126,7 +125,7 @@ endif()
 
 set(StabilizedHdiv++SRC ${header} ${source})
 
-add_executable(StabilizedHdiv ${common_SRC} main.cpp)
+add_executable(StabilizedHdiv ${common_SRC} main_cilamce14.cpp)
 
 target_link_libraries(StabilizedHdiv pz)
 

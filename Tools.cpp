@@ -8,6 +8,7 @@
 #include "Tools.h"
 #include "pzgengrid.h"
 #include "TPZAnalyticSolution.h"
+#include "TPZMixedStabilizedHdiv.h"
 
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("pz.hdiv"));
@@ -615,9 +616,11 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config){//(
     gmesh->ResetReference();
     TPZCompMesh *mphysics = new TPZCompMesh(gmesh);
     
+    
     //criando material
     int dim = gmesh->Dimension();
     TPZMixedPoisson *material = new TPZMixedPoisson(MatId,dim);
+    
 
     material->SetForcingFunction(config.exact.ForcingFunction());
     material->SetForcingFunctionExact(config.exact.Exact());
