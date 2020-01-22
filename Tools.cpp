@@ -389,11 +389,12 @@ void RefinamentoUnif(TPZGeoMesh* gmesh, int nDiv)
     //    gmesh->BuildConnectivity();
 }
 
-
-TPZCompMesh *CMeshFlux(int pOrder,TPZGeoMesh *gmesh)
+TPZCompMesh *CMeshFlux(ProblemConfig &config)
+//TPZCompMesh *CMeshFlux(int pOrder,TPZGeoMesh *gmesh)
 {
     /// criar materiais
-    int dim = 2;
+    int dim = config.dimension;
+    TPZGeoMesh *gmesh = config.gmesh;
     TPZMatPoisson3d *material;
     material = new TPZMatPoisson3d(MatId,dim);
     TPZMaterial * mat(material);
@@ -406,51 +407,61 @@ TPZCompMesh *CMeshFlux(int pOrder,TPZGeoMesh *gmesh)
     
     
     cmesh->InsertMaterialObject(mat);
-    cmesh->SetDefaultOrder(pOrder);
+    cmesh->SetDefaultOrder(config.orderp);
     
     ///Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
-    if(IsHomogeneo==true)
-    {
-        ///Criar condicoes de contorno
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
-        
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAcima;
-//        bcmatNeumannAcima = new TPZDummyFunction<STATE>(NeumannAcima);
-//        BCond2->SetForcingFunction(bcmatNeumannAcima);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAbaixo;
-//        bcmatNeumannAbaixo = new TPZDummyFunction<STATE>(NeumannAbaixo);
-//        BCond0->SetForcingFunction(bcmatNeumannAbaixo);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatDirichletEsquerda;
-//        bcmatDirichletEsquerda = new TPZDummyFunction<STATE>(DirichletEsquerda);
-//        BCond3->SetForcingFunction(bcmatDirichletEsquerda);
-        
-        cmesh->InsertMaterialObject(BCond0);
-        cmesh->InsertMaterialObject(BCond1);
-        cmesh->InsertMaterialObject(BCond2);
-        cmesh->InsertMaterialObject(BCond3);
-    }else{
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
-        TPZMaterial * BCond4 = material->CreateBC(mat, BC4,bcdirichlet, val1, val2);
-        TPZMaterial * BCond5 = material->CreateBC(mat, BC5,bcdirichlet, val1, val2);
-        
-        cmesh->InsertMaterialObject(BCond0);
-        cmesh->InsertMaterialObject(BCond1);
-        cmesh->InsertMaterialObject(BCond2);
-        cmesh->InsertMaterialObject(BCond3);
-        cmesh->InsertMaterialObject(BCond4);
-        cmesh->InsertMaterialObject(BCond5);
-    }
+    //bc materials
+    TPZManVector<int,4> bcids(4,-1);
+    for (auto matid : config.bcmaterialids) {
+         TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+         int bctype = 0;
+         TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+         bc->TPZMaterial::SetForcingFunction(config.exact.Exact());
+         cmesh->InsertMaterialObject(bc);
+     }
     
-    cmesh->SetDimModel(dim);
+//    if(IsHomogeneo==true)
+//    {
+//        ///Criar condicoes de contorno
+//        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
+//
+////        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAcima;
+////        bcmatNeumannAcima = new TPZDummyFunction<STATE>(NeumannAcima);
+////        BCond2->SetForcingFunction(bcmatNeumannAcima);
+////
+////        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAbaixo;
+////        bcmatNeumannAbaixo = new TPZDummyFunction<STATE>(NeumannAbaixo);
+////        BCond0->SetForcingFunction(bcmatNeumannAbaixo);
+////
+////        TPZAutoPointer<TPZFunction<STATE> > bcmatDirichletEsquerda;
+////        bcmatDirichletEsquerda = new TPZDummyFunction<STATE>(DirichletEsquerda);
+////        BCond3->SetForcingFunction(bcmatDirichletEsquerda);
+//
+//        cmesh->InsertMaterialObject(BCond0);
+//        cmesh->InsertMaterialObject(BCond1);
+//        cmesh->InsertMaterialObject(BCond2);
+//        cmesh->InsertMaterialObject(BCond3);
+//    }else{
+//        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond4 = material->CreateBC(mat, BC4,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond5 = material->CreateBC(mat, BC5,bcdirichlet, val1, val2);
+//
+//        cmesh->InsertMaterialObject(BCond0);
+//        cmesh->InsertMaterialObject(BCond1);
+//        cmesh->InsertMaterialObject(BCond2);
+//        cmesh->InsertMaterialObject(BCond3);
+//        cmesh->InsertMaterialObject(BCond4);
+//        cmesh->InsertMaterialObject(BCond5);
+//    }
+    
+    cmesh->SetDimModel(config.dimension);
     cmesh->AutoBuild();//Ajuste da estrutura de dados computacional
     
     //#ifdef LOG4CXX
@@ -466,133 +477,165 @@ TPZCompMesh *CMeshFlux(int pOrder,TPZGeoMesh *gmesh)
     return cmesh;
 }
 
-TPZCompMesh *CMeshPressure(int pOrder,TPZGeoMesh *gmesh)
+TPZCompMesh *CMeshPressure(ProblemConfig &config)//(int pOrder,TPZGeoMesh *gmesh)
 {
-    /// criar materiais
-    int dim = 2;
-    TPZMatPoisson3d *material;
-    material = new TPZMatPoisson3d(MatId,dim);
-    //material->NStateVariables();
-
-    TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
-    cmesh->SetDimModel(dim);
-    TPZMaterial * mat(material);
-    cmesh->InsertMaterialObject(mat);
-    cmesh->SetDefaultOrder(pOrder);
-    
-    ///Inserir condicao de contorno
-    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
-    if(IsHomogeneo==true)
-    {
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
-        
-        cmesh->InsertMaterialObject(BCond0);
-        cmesh->InsertMaterialObject(BCond1);
-        cmesh->InsertMaterialObject(BCond2);
-        cmesh->InsertMaterialObject(BCond3);
-    }else{
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
-        TPZMaterial * BCond4 = material->CreateBC(mat, BC4,bcdirichlet, val1, val2);
-        TPZMaterial * BCond5 = material->CreateBC(mat, BC5,bcdirichlet, val1, val2);
-        
-        cmesh->InsertMaterialObject(BCond0);
-        cmesh->InsertMaterialObject(BCond1);
-        cmesh->InsertMaterialObject(BCond2);
-        cmesh->InsertMaterialObject(BCond3);
-        cmesh->InsertMaterialObject(BCond4);
-        cmesh->InsertMaterialObject(BCond5);
+    TPZCompMesh *cmesh = new TPZCompMesh(config.gmesh);
+    TPZMaterial *mat = 0;
+    for (auto matid : config.materialids) {
+        TPZMatPoisson3d *mix = new TPZMatPoisson3d(matid, cmesh->Dimension());
+        if (!mat) mat = mix;
+        cmesh->InsertMaterialObject(mix);
     }
     
-    if(IsContinuou==false)
-    {
-        cmesh->SetAllCreateFunctionsDiscontinuous();
-        
-        //Ajuste da estrutura de dados computacional
+    cmesh->SetDefaultOrder(config.orderp);
+    cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
+    if(config.Iscontinuouspressure){
         cmesh->AutoBuild();
-        
-        int ncon = cmesh->NConnects();
-        for(int i=0; i<ncon; i++)
-        {
-            TPZConnect &newnod = cmesh->ConnectVec()[i];
-            //newnod.SetPressure(true);
-            newnod.SetLagrangeMultiplier(1);
-        }
-        
-        int nel = cmesh->NElements();
-        for(int i=0; i<nel; i++){
-            TPZCompEl *cel = cmesh->ElementVec()[i];
-            TPZCompElDisc *celdisc = dynamic_cast<TPZCompElDisc *>(cel);
-            celdisc->SetConstC(1.);
-            celdisc->SetCenterPoint(0, 0.);
-            celdisc->SetCenterPoint(1, 0.);
-            celdisc->SetCenterPoint(2, 0.);
-            celdisc->SetTrueUseQsiEta();
-            if(celdisc && celdisc->Reference()->Dimension() == cmesh->Dimension())
-            {
-                if(fTriang==true) celdisc->SetTotalOrderShape();
-                else celdisc->SetTensorialShape();
-            }
-            
-        }
-        
-        
-#ifdef PZDEBUG
-        int ncel = cmesh->NElements();
-        for(int i =0; i<ncel; i++){
-            TPZCompEl * compEl = cmesh->ElementVec()[i];
-            if(!compEl) continue;
-            TPZInterfaceElement * facel = dynamic_cast<TPZInterfaceElement *>(compEl);
-            if(facel)DebugStop();
-            
-        }
-#endif
     }
     else{
-        cmesh->SetAllCreateFunctionsContinuous();
-        //Ajuste da estrutura de dados computacional
+        cmesh->ApproxSpace().CreateDisconnectedElements(true);
         cmesh->AutoBuild();
+        int64_t n_connects = cmesh->NConnects();
+        for (int64_t i = 0; i < n_connects; ++i) {
+            cmesh->ConnectVec()[i].SetLagrangeMultiplier(1);
+        }
+
     }
     
-    //#ifdef LOG4CXX
-    //    if(logdata->isDebugEnabled())
-    //    {
-    //        std::stringstream sout;
-    //        sout<<"\n\n Malha Computacional_2 pressure\n ";
-    //        cmesh->Print(sout);
-    //        LOGPZ_DEBUG(logdata,sout.str());
-    //    }
-    //#endif
+    
+//    /// criar materiais
+//    int dim = 2;
+//    TPZMatPoisson3d *material;
+//    material = new TPZMatPoisson3d(MatId,dim);
+//    //material->NStateVariables();
+//
+//    TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
+//    cmesh->SetDimModel(dim);
+//    TPZMaterial * mat(material);
+//    cmesh->InsertMaterialObject(mat);
+//    cmesh->SetDefaultOrder(pOrder);
+//
+//    ///Inserir condicao de contorno
+//    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+//    if(IsHomogeneo==true)
+//    {
+//        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
+//
+//        cmesh->InsertMaterialObject(BCond0);
+//        cmesh->InsertMaterialObject(BCond1);
+//        cmesh->InsertMaterialObject(BCond2);
+//        cmesh->InsertMaterialObject(BCond3);
+//    }else{
+//        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond4 = material->CreateBC(mat, BC4,bcdirichlet, val1, val2);
+//        TPZMaterial * BCond5 = material->CreateBC(mat, BC5,bcdirichlet, val1, val2);
+//
+//        cmesh->InsertMaterialObject(BCond0);
+//        cmesh->InsertMaterialObject(BCond1);
+//        cmesh->InsertMaterialObject(BCond2);
+//        cmesh->InsertMaterialObject(BCond3);
+//        cmesh->InsertMaterialObject(BCond4);
+//        cmesh->InsertMaterialObject(BCond5);
+//    }
+//
+//    if(IsContinuou==false)
+//    {
+//        cmesh->SetAllCreateFunctionsDiscontinuous();
+//
+//        //Ajuste da estrutura de dados computacional
+//        cmesh->AutoBuild();
+//
+//        int ncon = cmesh->NConnects();
+//        for(int i=0; i<ncon; i++)
+//        {
+//            TPZConnect &newnod = cmesh->ConnectVec()[i];
+//            //newnod.SetPressure(true);
+//            newnod.SetLagrangeMultiplier(1);
+//        }
+//
+//        int nel = cmesh->NElements();
+//        for(int i=0; i<nel; i++){
+//            TPZCompEl *cel = cmesh->ElementVec()[i];
+//            TPZCompElDisc *celdisc = dynamic_cast<TPZCompElDisc *>(cel);
+//            celdisc->SetConstC(1.);
+//            celdisc->SetCenterPoint(0, 0.);
+//            celdisc->SetCenterPoint(1, 0.);
+//            celdisc->SetCenterPoint(2, 0.);
+//            celdisc->SetTrueUseQsiEta();
+//            if(celdisc && celdisc->Reference()->Dimension() == cmesh->Dimension())
+//            {
+//                if(fTriang==true) celdisc->SetTotalOrderShape();
+//                else celdisc->SetTensorialShape();
+//            }
+//
+//        }
+//
+//
+//#ifdef PZDEBUG
+//        int ncel = cmesh->NElements();
+//        for(int i =0; i<ncel; i++){
+//            TPZCompEl * compEl = cmesh->ElementVec()[i];
+//            if(!compEl) continue;
+//            TPZInterfaceElement * facel = dynamic_cast<TPZInterfaceElement *>(compEl);
+//            if(facel)DebugStop();
+//
+//        }
+//#endif
+//    }
+//    else{
+//        cmesh->SetAllCreateFunctionsContinuous();
+//        //Ajuste da estrutura de dados computacional
+//        cmesh->AutoBuild();
+//    }
+//
+//    //#ifdef LOG4CXX
+//    //    if(logdata->isDebugEnabled())
+//    //    {
+//    //        std::stringstream sout;
+//    //        sout<<"\n\n Malha Computacional_2 pressure\n ";
+//    //        cmesh->Print(sout);
+//    //        LOGPZ_DEBUG(logdata,sout.str());
+//    //    }
+//    //#endif
     return cmesh;
 }
 
-TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh){
+TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config){//(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh){
     
+
+
+    TPZGeoMesh *gmesh= config.gmesh;
     //Creating computational mesh for multiphysic elements
     gmesh->ResetReference();
     TPZCompMesh *mphysics = new TPZCompMesh(gmesh);
     
     //criando material
-    int dim = 2;
+    int dim = gmesh->Dimension();
     TPZMixedPoisson *material = new TPZMixedPoisson(MatId,dim);
+
+    material->SetForcingFunction(config.exact.ForcingFunction());
+    material->SetForcingFunctionExact(config.exact.Exact());
     
     //incluindo os dados do problema
-    REAL coefk = 1.;
-    material->SetPermeability(coefk);
-    REAL coefvisc = 1.;
-    material->SetViscosity(coefvisc);
+//    REAL coefk = 1.;
+//    material->SetPermeability(coefk);
+//    REAL coefvisc = 1.;
+//    material->SetViscosity(coefvisc);
     
     //permeabilidade
     if(IsHomogeneo==true){
-        TPZFMatrix<REAL> Ktensor(dim,dim,0.);
-        TPZFMatrix<REAL> InvK(dim,dim,0.);
-        Ktensor(0,0)=1.; Ktensor(1,1)=1.;
-        InvK=Ktensor;
+        TPZFMatrix<REAL> Ktensor(3,3,0.);
+        TPZFMatrix<REAL> InvK(3,3,0.);
+
+        TPZFMatrix<REAL> K(3,3,0),invK(3,3,0);
+        Ktensor.Identity();
+        InvK.Identity();
         material->SetPermeabilityTensor(Ktensor,InvK);
     }
     else{
@@ -611,27 +654,9 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh){
         material->SetHdois();
     }
     
-    //solucao exata
-    TPZAutoPointer<TPZFunction<STATE> > solexata;
-    if(IsHomogeneo==true){
-//        solexata = new TPZDummyFunction<STATE>(SolExataMista);
-//        material->SetForcingFunctionExact(solexata);
-    }else{
-//        solexata = new TPZDummyFunction<STATE>(SolFluxoHeter);
-//        material->SetForcingFunctionExact(solexata);
-    }
     
-    //funcao do lado direito da equacao do problema
-    TPZAutoPointer<TPZFunction<STATE> > forcef;
-    TPZDummyFunction<STATE> *dum;
-    if(IsHomogeneo==true){
-        //dum = new TPZDummyFunction<STATE>(ForcingMista);
-    }else{
-       // dum = new TPZDummyFunction<STATE>(ForcingHeter);
-    }
-//    dum->SetPolynomialOrder(20);
-//    forcef = dum;
-//    material->SetForcingFunction(forcef);
+    
+
     
     //inserindo o material na malha computacional
     TPZMaterial *mat(material);
@@ -640,67 +665,12 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh){
     //Criando condicoes de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
     
-    if(IsHomogeneo==true)
-    {
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcneumann, val1, val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcneumann, val1, val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcneumann, val1, val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcdirichlet, val1, val2);
-        
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAcima;
-//        bcmatNeumannAcima = new TPZDummyFunction<STATE>(NeumannAcima);
-//        BCond2->SetForcingFunction(bcmatNeumannAcima);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAbaixo;
-//        bcmatNeumannAbaixo = new TPZDummyFunction<STATE>(NeumannAbaixo);
-//        BCond0->SetForcingFunction(bcmatNeumannAbaixo);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatDirichletEsquerda;
-//        bcmatDirichletEsquerda = new TPZDummyFunction<STATE>(DirichletEsquerda);
-//        BCond3->SetForcingFunction(bcmatDirichletEsquerda);
-        
-        mphysics->InsertMaterialObject(BCond0);
-        mphysics->InsertMaterialObject(BCond1);
-        mphysics->InsertMaterialObject(BCond2);
-        mphysics->InsertMaterialObject(BCond3);
-    }else{
-        TPZMaterial * BCond0 = material->CreateBC(mat, BC0,bcneumann, val1,val2);
-        TPZMaterial * BCond1 = material->CreateBC(mat, BC1,bcneumann, val1,val2);
-        TPZMaterial * BCond2 = material->CreateBC(mat, BC2,bcdirichlet,val1,val2);
-        TPZMaterial * BCond3 = material->CreateBC(mat, BC3,bcneumann, val1, val2);
-        TPZMaterial * BCond4 = material->CreateBC(mat, BC4,bcneumann, val1, val2);
-        TPZMaterial * BCond5 = material->CreateBC(mat, BC5,bcdirichlet,val1,val2);
-        
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAbaixoXMenorZero;
-//        bcmatNeumannAbaixoXMenorZero = new TPZDummyFunction<STATE>(NeumannAbaixoXMenorZero);
-//        BCond0->SetForcingFunction(bcmatNeumannAbaixoXMenorZero);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAbaixoXMaiorZero;
-//        bcmatNeumannAbaixoXMaiorZero = new TPZDummyFunction<STATE>(NeumannAbaixoXMaiorZero);
-//        BCond1->SetForcingFunction(bcmatNeumannAbaixoXMaiorZero);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatDirichletXIgualUm;
-//        bcmatDirichletXIgualUm = new TPZDummyFunction<STATE>(DirichletXIgualUm);
-//        BCond2->SetForcingFunction(bcmatDirichletXIgualUm);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAcimaXMaiorZero;
-//        bcmatNeumannAcimaXMaiorZero = new TPZDummyFunction<STATE>(NeumannAcimaXMaiorZero);
-//        BCond3->SetForcingFunction(bcmatNeumannAcimaXMaiorZero);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatNeumannAcimaXMenorZero;
-//        bcmatNeumannAcimaXMenorZero = new TPZDummyFunction<STATE>(NeumannAcimaXMenorZero);
-//        BCond4->SetForcingFunction(bcmatNeumannAcimaXMenorZero);
-//
-//        TPZAutoPointer<TPZFunction<STATE> > bcmatDirichletXIgualMenosUm;
-//        bcmatDirichletXIgualMenosUm = new TPZDummyFunction<STATE>(DirichletXIgualMenosUm);
-//        BCond5->SetForcingFunction(bcmatDirichletXIgualMenosUm);
-        
-        mphysics->InsertMaterialObject(BCond0);
-        mphysics->InsertMaterialObject(BCond1);
-        mphysics->InsertMaterialObject(BCond2);
-        mphysics->InsertMaterialObject(BCond3);
-        mphysics->InsertMaterialObject(BCond4);
-        mphysics->InsertMaterialObject(BCond5);
+    for (auto matid : config.bcmaterialids) {
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        int bctype = 0;
+        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        bc->TPZMaterial::SetForcingFunction(config.exact.Exact());
+        mphysics->InsertMaterialObject(bc);
     }
     
     mphysics->SetAllCreateFunctionsMultiphysicElem();
@@ -1124,8 +1094,20 @@ void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out)
     
 }
 
-void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out)
+void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out,ProblemConfig &config)
 {
+//    TPZAnalysis an(l2mesh,false);
+//    TPZManVector<REAL> errors(4,0.);
+//    if(config.exact.Exact())
+//    {
+//
+//        an.SetThreadsForError(0);
+//        an.SetExact(config.exact.ExactSolution());
+//        an.PostProcessError(errors,true);
+//
+//    }
+        
+    
     long nel = l2mesh->NElements();
     int dim = l2mesh->Dimension();
     TPZManVector<STATE,10> globerrors(10,0.);
@@ -1139,11 +1121,12 @@ void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out)
             continue;
         }
         TPZManVector<REAL,10> elerror(10,0.);
-        if(IsHomogeneo==true){
-            cel->EvaluateError(SolExataPressao, elerror, NULL);
-        }else{
-            cel->EvaluateError(SolPressaoHeter, elerror, NULL);
-        }
+        cel->EvaluateError(config.exact.ExactSolution(), elerror, NULL);
+//        if(IsHomogeneo==true){
+//            cel->EvaluateError(SolExataPressao, elerror, NULL);
+//        }else{
+//            cel->EvaluateError(SolPressaoHeter, elerror, NULL);
+//        }
         int nerr = elerror.size();
         globerrors.resize(nerr);
 #ifdef LOG4CXX
@@ -1156,13 +1139,13 @@ void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out)
         for (int i=0; i<nerr; i++) {
             globerrors[i] += elerror[i]*elerror[i];
         }
-        
+
     }
     out << "\n";
     out << "Errors associated with L2 or H1 space\n";
-    out << "H1 Norm = "    << sqrt(globerrors[0]) << std::endl;
-    out << "L2 Norm = "    << sqrt(globerrors[1]) << std::endl;
-    out << "Semi H1 Norm = "    << sqrt(globerrors[2]) << std::endl;
+    out << "H1 Norm = "    << sqrt(globerrors[0]) << "\n";
+    out << "L2 Norm = "    << sqrt(globerrors[1]) << "\n";
+    out << "Semi H1 Norm = " << sqrt(globerrors[2])<<"\n";
 }
 
 void ComputeFluxError(TPZCompMesh *cmesh, std::ostream &out){
@@ -1362,3 +1345,112 @@ void NEquationsCondensed(TPZCompMesh *cmesh, long &neqglob,long &neqcond, bool i
     }
 }
 
+TPZMultiphysicsCompMesh *CreateHDivMesh(ProblemConfig &problem) {
+   
+    TPZMultiphysicsCompMesh *cmesh = new TPZMultiphysicsCompMesh(problem.gmesh);
+    TPZMaterial *mat = NULL;
+    TPZFMatrix<REAL> K(3,3,0),invK(3,3,0);
+    K.Identity();
+    invK.Identity();
+    
+
+//    K.Print(std::cout);
+//    invK.Print(std::cout);
+    
+    for (auto matid : problem.materialids) {
+        TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());
+        mix->SetForcingFunction(problem.exact.ForcingFunction());
+        mix->SetForcingFunctionExact(problem.exact.Exact());
+        mix->SetPermeabilityTensor(K, invK);
+        
+        if (!mat) mat = mix;
+        
+        cmesh->InsertMaterialObject(mix);
+    }
+    for (auto matid : problem.bcmaterialids) {
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        int bctype = 0;
+        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+        cmesh->InsertMaterialObject(bc);
+    }
+    cmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
+   // std::set<int> matid;
+//    matid.insert(1);
+//    matid.insert(-1);
+    TPZManVector<int> active(2,1);
+    TPZManVector<TPZCompMesh *> meshvector(2,0);
+    
+    meshvector[0] = CMeshFlux(problem);
+    meshvector[1] = CMeshPressure(problem);
+    cmesh->BuildMultiphysicsSpace(active, meshvector);
+    cmesh->LoadReferences();
+//    bool keepmatrix = false;
+//    bool keeponelagrangian = true;
+//    TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
+    
+    return cmesh;
+}
+
+void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
+{
+    
+    TPZAnalysis an(cmesh,false);
+    
+    
+#ifdef USING_MKL
+    TPZSymetricSpStructMatrix strmat(cmesh);
+    strmat.SetNumThreads(0);
+    //        strmat.SetDecomposeType(ELDLt);
+    an.SetStructuralMatrix(strmat);
+#else
+    TPZParFrontStructMatrix<TPZFrontSym<STATE> > strmat(cmesh_HDiv);
+    strmat.SetNumThreads(0);
+    //        TPZSkylineStructMatrix strmat3(cmesh_HDiv);
+    //        strmat3.SetNumThreads(8);
+#endif
+    
+    TPZStepSolver<STATE> *direct = new TPZStepSolver<STATE>;
+    direct->SetDirect(ELDLt);
+    an.SetSolver(*direct);
+    delete direct;
+    direct = 0;
+    an.Assemble();
+    an.Solve();//resolve o problema misto ate aqui
+    TPZStack<std::string> scalnames, vecnames;
+    scalnames.Push("Pressure");
+    scalnames.Push("ExactPressure");
+    vecnames.Push("Flux");
+    vecnames.Push("ExactFlux");
+    
+    int dim = config.gmesh->Dimension();
+    
+    std::stringstream sout;
+    
+    sout << config.dir_name << "/"  "StabProblem_"<<config.problemname<<"OrderP"<< config.orderp<<"OrderQ"<<config.orderq<<"Nref_"<<config.ndivisions<<".vtk";
+    
+    an.DefineGraphMesh(dim, scalnames, vecnames, sout.str());
+    int resolution=2;
+    an.PostProcess(resolution,dim);
+    
+    if(config.exact.Exact())
+    {
+        TPZManVector<REAL> errors(4,0.);
+        an.SetThreadsForError(0);
+        an.SetExact(config.exact.ExactSolution());
+        an.PostProcessError(errors,false);
+        
+        //Erro
+        
+        ofstream myfile;
+        myfile.open("MixedError.txt", ios::app);
+        myfile << "\n\n Error for Mixed formulation " ;
+        myfile << "\n-------------------------------------------------- \n";
+        myfile << "Ndiv = " << config.ndivisions << " Order k = " << config.porder <<"\n";
+        myfile << "Energy norm = " << errors[0] << "\n";//norma energia
+        myfile << "error norm L2 = " << errors[1] << "\n";//norma L2
+        myfile << "Semi norm H1 = " << errors[2] << "\n";//norma L2
+        myfile.close();
+        
+    }
+}

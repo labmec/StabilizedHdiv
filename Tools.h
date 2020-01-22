@@ -47,11 +47,15 @@
 #include "TPZVTKGeoMesh.h"
 //
 #include "pzlog.h"
+#include "ProblemConfig.h"
 //
 
 #include "pzaxestools.h"
 #include "TPZCopySolve.h"
 #include "pzstrmatrix.h"
+#include "pzbuildmultiphysicsmesh.h"
+#include "TPZMultiphysicsCompMesh.h"
+#include "TPZSSpStructMatrix.h"
 
 
 #endif /* Tools_hpp */
@@ -65,11 +69,18 @@ TPZGeoMesh *GMesh2(REAL Lx, REAL Ly,bool triang_elements);
 TPZGeoMesh *GMesh3(bool triang_elements);
 
 TPZCompMesh *CMeshFlux(int pOrder, TPZGeoMesh *gmesh);
+TPZCompMesh *CMeshFlux(ProblemConfig &config);
 TPZCompMesh *CMeshPressure(int pOrder,TPZGeoMesh *gmesh);
+TPZCompMesh *CMeshPressure(ProblemConfig &config);
 TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh);
+TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config);
+TPZMultiphysicsCompMesh *CreateHDivMesh(ProblemConfig &problem);
 
 void RefinamentoUnif(TPZGeoMesh* gmesh, int nDiv);
 void ResolverSistema(TPZAnalysis &an, TPZCompMesh *fCmesh, int numthreads, bool direct);
+void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config);
+
+
 void PosProcessMultph(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile);
 void PosProcessFluxo(TPZAnalysis &an, std::string plotfile);
 
@@ -100,7 +111,7 @@ void PermeabilityTensor(const TPZVec<REAL> &pt, TPZVec<STATE> &kabs, TPZFMatrix<
 
 //erros
 void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out);
-void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out);
+void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out,ProblemConfig &config);
 
 void ComputeFluxError(TPZCompMesh *cmesh, std::ostream &out);
 void ComputePressureError(TPZCompMesh *cmesh, std::ostream &out);

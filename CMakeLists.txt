@@ -12,6 +12,7 @@ TPZMixedStabilizedHdiv.cpp
 TPZMixedStabilizedHdiv.h
 Tools.h
 Tools.cpp
+ProblemConfig.h
 )
 
 set(CMAKE_CXX_STANDARD 11)
