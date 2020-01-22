@@ -110,7 +110,7 @@ void DirichletXIgualUm(const TPZVec<REAL> &pt, TPZVec<STATE> &disp);
 void PermeabilityTensor(const TPZVec<REAL> &pt, TPZVec<STATE> &kabs, TPZFMatrix<STATE> &tensorK);
 
 //erros
-void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out);
+void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out,ProblemConfig &config);
 void ErrorL22(TPZCompMesh *l2mesh, std::ostream &out,ProblemConfig &config);
 
 void ComputeFluxError(TPZCompMesh *cmesh, std::ostream &out);

@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
             TPZVec<REAL> erros;
 
             //saidaerro<<"\nErro da simulacao multifisica do fluxo (q)" <<endl;
-            ErrorHDiv2(cmesh1, saidaerro);
+            ErrorHDiv2(cmesh1, saidaerro,config);
 
             //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
             ErrorL22(cmesh2, saidaerro,config);

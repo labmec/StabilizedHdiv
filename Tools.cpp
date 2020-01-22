@@ -1073,7 +1073,7 @@ void PermeabilityTensor(const TPZVec<REAL> &pt, TPZVec<STATE> &kabs, TPZFMatrix<
     }
 }
 
-void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out)
+void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out,ProblemConfig &config)
 {
     long nel = hdivmesh->NElements();
     int dim = hdivmesh->Dimension();
@@ -1088,11 +1088,12 @@ void ErrorHDiv2(TPZCompMesh *hdivmesh, std::ostream &out)
             continue;
         }
         TPZManVector<REAL,10> elerror(10,0.);
-        if(IsHomogeneo==true){
-            cel->EvaluateError(SolExataMista, elerror, NULL);
-        }else{
-            cel->EvaluateError(SolFluxoHeter, elerror, NULL);
-        }
+        cel->EvaluateError(config.exact.ExactSolution(), elerror, NULL);
+//        if(IsHomogeneo==true){
+//            cel->EvaluateError(SolExataMista, elerror, NULL);
+//        }else{
+//            cel->EvaluateError(SolFluxoHeter, elerror, NULL);
+//        }
         int nerr = elerror.size();
         for (int i=0; i<nerr; i++) {
             globerrors[i] += elerror[i]*elerror[i];
