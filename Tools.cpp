@@ -42,7 +42,19 @@ bool IsHomogeneo = true;
 //static int bilinearounao [18] =   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 //EM tpzquadrilateral.cpp de Topology
 
-TPZGeoMesh *CreateGeoMesh(int nel) {
+TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids) {
+    
+//    TPZManVector<int> nx(2,nel);
+//    TPZManVector<REAL> x0(3,0.),x1(3,1.);
+//    x1[2] = 0.;
+//    TPZGenGrid gen(nx,x0,x1);
+//    gen.SetRefpatternElements(true);
+//    TPZGeoMesh* gmesh = new TPZGeoMesh;
+//    gen.Read(gmesh);
+//    gen.SetBC(gmesh, 4, BC0);
+//    gen.SetBC(gmesh, 5, BC1);
+//    gen.SetBC(gmesh, 6, BC2);
+//    gen.SetBC(gmesh, 7, BC3);
     
     TPZManVector<int> nx(2,nel);
     TPZManVector<REAL> x0(3,0.),x1(3,1.);
@@ -51,11 +63,10 @@ TPZGeoMesh *CreateGeoMesh(int nel) {
     gen.SetRefpatternElements(true);
     TPZGeoMesh* gmesh = new TPZGeoMesh;
     gen.Read(gmesh);
-    gen.SetBC(gmesh, 4, BC0);
-    gen.SetBC(gmesh, 5, BC1);
-    gen.SetBC(gmesh, 6, BC2);
-    gen.SetBC(gmesh, 7, BC3);
-    
+    gen.SetBC(gmesh, 4, bcids[0]);
+    gen.SetBC(gmesh, 5, bcids[1]);
+    gen.SetBC(gmesh, 6, bcids[2]);
+    gen.SetBC(gmesh, 7, bcids[3]);
     //  UniformRefinement(1, gmesh);
     return gmesh;
 }
@@ -465,6 +476,8 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     
     cmesh->SetDimModel(config.dimension);
     cmesh->AutoBuild();//Ajuste da estrutura de dados computacional
+    cmesh->AdjustBoundaryElements();
+    cmesh->CleanUpUnconnectedNodes();
     
     //#ifdef LOG4CXX
     //    if(logdata->isDebugEnabled())
@@ -493,6 +506,8 @@ TPZCompMesh *CMeshPressure(ProblemConfig &config)//(int pOrder,TPZGeoMesh *gmesh
     cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
     if(config.Iscontinuouspressure){
         cmesh->AutoBuild();
+        cmesh->AdjustBoundaryElements();
+        cmesh->CleanUpUnconnectedNodes();
     }
     else{
         cmesh->ApproxSpace().CreateDisconnectedElements(true);
