@@ -61,7 +61,7 @@
 #endif /* Tools_hpp */
 
 //meio homogeneo
-TPZGeoMesh *CreateGeoMesh(int nel);
+TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids);
 TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly);
 TPZGeoMesh *GMesh2(REAL Lx, REAL Ly,bool triang_elements);
 

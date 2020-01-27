@@ -7,14 +7,58 @@
 
 #include "TPZMixedStabilizedHdiv.h"
 #include "pzaxestools.h"
+#include "TPZAnalyticSolution.h"
+
+TPZMixedStabilizedHdiv::TPZMixedStabilizedHdiv(int matid, int dim): TPZMixedPoisson(matid,dim)
+{
+    
+}
+
+TPZMixedStabilizedHdiv::TPZMixedStabilizedHdiv():TPZMixedPoisson()
+{
+    
+}
+
+TPZMixedStabilizedHdiv::TPZMixedStabilizedHdiv(const TPZMixedStabilizedHdiv &copy):TPZMixedPoisson(copy)
+{
+    
+}
+
+TPZMixedStabilizedHdiv::TPZMixedStabilizedHdiv(const TPZMixedPoisson &copy):TPZMixedPoisson(copy)
+{
+    
+}
+
+
+TPZMixedStabilizedHdiv::~TPZMixedStabilizedHdiv()
+{
+    
+}
+
+TPZMixedStabilizedHdiv &TPZMixedStabilizedHdiv::operator=(const TPZMixedStabilizedHdiv &copy)
+{
+    TPZMixedPoisson::operator=(copy);
+    return *this;
+}
+
+void TPZMixedStabilizedHdiv::FillDataRequirements(TPZVec<TPZMaterialData > &datavec) {
+    
+    int nref = datavec.size();
+    for(int i = 0; i<nref; i++ )
+    {
+        datavec[i].SetAllRequirements(false);
+        datavec[i].fNeedsSol = true;
+        datavec[i].fNeedsHSize = false;
+    }
+}
 
 void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
-/*
- A((u,p),(v,q))= (f,(v,q))
- A((u,p),(v,q)) = (InvKu, v) - (div v,p) - (div u,q)+(div u, div v)-(K gradp,gradq)
-(f,(v,q)) = -2*(f,q)+(f,div v)
- */
-    
+///*
+// A((u,p),(v,q))= (f,(v,q))
+// A((u,p),(v,q)) = (InvKu, v) - (div v,p) - (div u,q)+(div u, div v)-(K gradp,gradq)
+//(f,(v,q)) = -2*(f,q)+(f,div v)
+// */
+//    
     STATE force = ff;
     if(fForcingFunction) {
         TPZManVector<STATE> res(1);
@@ -36,10 +80,10 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     TPZAxesTools<REAL>::Axes2XYZ(dphiP, dphiPXY, datavec[1].axes);
     
     
-   // REAL &faceSize = datavec[0].HSize;
-    
-  //      fh2 = faceSize*faceSize;
-    
+//    REAL &faceSize = datavec[0].HSize;
+//    if(fUseHdois==true){
+//        fh2 = faceSize*faceSize;
+//    }else fh2 = 1.;
     
     int phrq, phrp;
     phrp = phip.Rows();
@@ -52,15 +96,6 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         }
     }
 #ifdef PZDEBUG
-    if(nactive == 4)
-    {
-        int phrgb = datavec[2].phi.Rows();
-        int phrub = datavec[3].phi.Rows();
-        if(phrp+phrq+phrgb+phrub != ek.Rows())
-        {
-            DebugStop();
-        }
-    }else
     {
         if(phrp+phrq != ek.Rows())
         {
@@ -81,8 +116,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         
         //Inserindo termo de estabilizacao no termo de fonte
         REAL divqi = 0.;
-        //if(fIsStabilized)
-       // {
+//        if(fIsStabilized)
+//        {
             //calculando div(qi)
             TPZFNMatrix<3,REAL> axesvec(3,1,0.);
             datavec[0].axes.Multiply(ivec,axesvec);
@@ -90,8 +125,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             {
                 divqi += axesvec(iloc,0)*dphiQ(iloc,ishapeind);
             }
-            ef(iq, 0) += weight*(divqi*force);
-       // }
+            ef(iq, 0) += weight*(0.5*divqi*force);
+        //}
         
         TPZFNMatrix<3,REAL> ivecZ(3,1,0.);
         TPZFNMatrix<3,REAL> jvecZ(3,1,0.);
@@ -106,19 +141,19 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             }
             
             //dot product between Kinv[u]v
-//            jvecZ.Zero();
-//            for(int id=0; id<fDim; id++){
-//                for(int jd=0; jd<fDim; jd++){
-//                    jvecZ(id,0) += InvPermTensor(id,jd)*jvec(jd,0);
-//                }
-//            }
-//            //jvecZ.Print("mat1 = ");
-//            REAL prod1 = ivec(0,0)*jvecZ(0,0) + ivec(1,0)*jvecZ(1,0) + ivec(2,0)*jvecZ(2,0);
-//            ek(iq,jq) += fvisc*weight*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod1;
+            jvecZ.Zero();
+            for(int id=0; id<fDim; id++){
+                for(int jd=0; jd<fDim; jd++){
+                    jvecZ(id,0) += InvPermTensor(id,jd)*jvec(jd,0);
+                }
+            }
+            //jvecZ.Print("mat1 = ");
+            REAL prod1 = ivec(0,0)*jvecZ(0,0) + ivec(1,0)*jvecZ(1,0) + ivec(2,0)*jvecZ(2,0);
+            ek(iq,jq) += weight*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod1;
             
             
             //Inserindo termos de estabilizacao na matriz do fluxo
-           // if(fIsStabilized==true)
+            //if(fIsStabilized==true)
             //{
                 //termos de delta1
                 //dot product between uKinv[v]
@@ -130,7 +165,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 }
                 //ivecZ.Print("mat2 = ");
                 REAL prod2 = ivecZ(0,0)*jvec(0,0) + ivecZ(1,0)*jvec(1,0) + ivecZ(2,0)*jvec(2,0);
-                ek(iq,jq) += (-1.)*weight*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod2;
+                ek(iq,jq) += (-1.)*weight*0.5*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod2;
                 
                 
                 //termos de delta2: //dot product between divQu.divQv
@@ -142,8 +177,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 {
                     divqj += axesvec(jloc,0)*dphiQ(jloc,jshapeind);
                 }
-                ek(iq,jq) += weight*divqi*divqj;
-           // }
+                ek(iq,jq) += weight*0.5*divqi*divqj;
+            //}
             
         }
     }
@@ -180,63 +215,224 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             
             
             //Inserindo termo de estabilizacao: delta1
-          //  if(fIsStabilized==true)
-          //  {
+            //if(fIsStabilized==true)
+            //{
                 //produto gardPu.Qv
                 REAL dotVGradP = 0.;
-    
+                
                 for(int k =0; k<fDim; k++)
                 {
                     dotVGradP += ivec(k,0)*phiQ(ishapeind,0)*dphiP(k,jp);
                 }
                 
-                REAL integration = (-1.)*weight*dotVGradP;
+                REAL integration = (-1.)*weight*0.5*dotVGradP;
                 
                 // Estabilizacao delta1 na Matrix B
                 ek(iq, phrq+jp) += integration;
                 
                 // Estabilizacao delta1 na Matrix BˆT
                 ek(phrq+jp,iq) += integration;
-           // }
+            //}
         }
     }
     
     //termo fonte referente a equacao da pressao
     for(int ip=0; ip<phrp; ip++){
-        ef(phrq+ip,0) += (-2.)*weight*force*phip(ip,0);
+        ef(phrq+ip,0) += (-1.)*weight*force*phip(ip,0);
     }
     
     //Contribution for estabilization delta1 for gradPu*gradPv. Matrix D
    // if(fIsStabilized==true)
-   // {
+    //{
         //produto KgradPu x KgradPv
         TPZFNMatrix<3,REAL> dphiPuZ(dphiP.Rows(),dphiP.Cols(),0.);
         PermTensor.Multiply(dphiPXY, dphiPuZ);
         
+        REAL umSobreVisc = 1./fvisc;
         for(int ip=0; ip<phrp; ip++)
         {
             for(int jp=0; jp<phrp; jp++)
             {
                 for(int k =0; k<3; k++)
                 {
-                    ek(phrq+ip, phrq+jp) += (-1.)*weight*dphiPuZ(k,ip)*dphiPXY(k,jp);
+                    ek(phrq+ip, phrq+jp) += (-1.)*weight*0.5*umSobreVisc*dphiPuZ(k,ip)*dphiPXY(k,jp);
                 }
                 
             }
         }
-  //  }
-    if(nactive == 4)
-    {
-        for(int ip=0; ip<phrp; ip++)
-        {
-            ek(phrq+ip,phrq+phrp) += phip(ip,0)*weight;
-            ek(phrq+phrp,phrq+ip) += phip(ip,0)*weight;
-        }
-        ek(phrp+phrq+1,phrq+phrp) += -weight;
-        ek(phrq+phrp,phrp+phrq+1) += -weight;
-    }
-
-    
+    //}
 }
 
+int TPZMixedStabilizedHdiv::VariableIndex(const std::string &name)
+{
+    if(name == "FluxFem") return 40;
+    if(name == "FluxExact") return 41;
+    if(name == "DivFluxFem") return 42;
+    if(name == "DivFluxExact") return 43;
+    if(name == "PressureFem") return 44;
+    if(name == "PressureExact") return 45;
+    if(name == "POrderPressure") return 46;
+    if(name == "GradPressureFem") return 47;
+    
+    return -1;
+}
 
+int TPZMixedStabilizedHdiv::NSolutionVariables(int var)
+{
+    switch (var) {
+        case 40:
+        case 41:
+            return 3;
+            break;
+        case 42:
+        case 43:
+        case 44:
+        case 45:
+        case 46:
+            return 1;
+            break;
+        case 47:
+            return 3;
+            break;
+        default:
+            DebugStop();
+            break;
+    }
+    return 0;
+}
+
+void TPZMixedStabilizedHdiv::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)
+{
+    /**
+     datavec[0] Hdiv mesh fem
+     datavec[1] L2 mesh fem
+     **/
+    
+    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
+    TPZFNMatrix<9,REAL> InvPermTensor = fInvK;
+    
+    
+    TPZManVector<STATE,2> pressexact(1,0.);
+    TPZFNMatrix<9,STATE> gradu(3,1,0.), fluxinv(3,1);
+    
+    TPZVec<STATE> divsigma_exact(1);
+    if(fForcingFunctionExact)
+    {
+        this->fForcingFunctionExact->Execute(datavec[0].x, pressexact,gradu);
+        this->fForcingFunction->Execute(datavec[0].x,divsigma_exact);
+        
+    }
+    PermTensor.Multiply(gradu,fluxinv);
+    
+    //calculo do gradiente da pressao
+    TPZFNMatrix<3,REAL> dsoldx;
+    TPZFMatrix<REAL> dsoldaxes(fDim,1);
+    for (int i=0; i<fDim; i++) dsoldaxes(i,0) = datavec[1].dsol[0][i];
+    TPZAxesTools<REAL>::Axes2XYZ(dsoldaxes, dsoldx, datavec[1].axes);
+    
+    switch (var)
+    {
+        case 40://FluxFem
+            for(int i=0; i<fDim; i++) Solout[i] = datavec[0].sol[0][i];
+            break;
+        case 41://FluxExact
+            for(int i=0; i<fDim; i++) Solout[i] = -fluxinv(i);
+            break;
+        case 42://DivFluxFem
+            Solout[0] = datavec[0].divsol[0][0];
+            break;
+        case 43://DivFluxExact
+             Solout[0] = divsigma_exact[0];
+            break;
+        case 44://PressureFem
+            Solout[0] = datavec[1].sol[0][0];
+            break;
+        case 45://PressureExact
+            Solout[0] = pressexact[0];
+            break;
+        case 46://POrderPressure
+            Solout[0] = datavec[1].p;
+            break;
+        case 47:
+            Solout[0]=0.;
+            for (int i=0; i<fDim; i++) Solout[i] = dsoldx(i,0);
+            break;
+        default:
+            DebugStop();
+    }
+}
+
+void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> &u_exact, TPZFMatrix<STATE> &du_exact, TPZVec<REAL> &errors)
+{
+    /**
+     datavec[0] Flux
+     datavec[1] L2 mesh,
+     
+     error[0] - eror em norma L2 para a variavel pressao
+     error[1] - erro em semi norma H1 para a variavel pressao
+     error[2] - erro em norma H1 <=> norma Energia para a variavel pressao
+     
+     error[3] - eror em norma L2 para a variavel fluxo
+     error[4] - eror em norma L2 para a variavel divergente do fluxo
+     **/
+    
+    errors.Resize(NEvalErrors());
+    errors.Fill(0.0);
+    
+    TPZManVector<STATE,3> fluxfem(3), pressurefem(1);
+    fluxfem = data[0].sol[0];
+    pressurefem[0] = data[1].sol[0][0];
+    STATE divsigmafem = data[0].divsol[0][0];
+    
+    TPZVec<STATE> divsigma_exact(1);
+    if(this->fForcingFunctionExact){
+        this->fForcingFunctionExact->Execute(data[0].x,u_exact,du_exact);
+        this->fForcingFunction->Execute(data[0].x,divsigma_exact);
+    }
+    
+    REAL errodivsigma = 0.;
+    errodivsigma = (divsigma_exact[0] - divsigmafem)*(divsigma_exact[0] - divsigmafem);
+    
+    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
+    TPZFNMatrix<9,REAL> InvPermTensor = fInvK;
+    
+    
+    TPZFNMatrix<3,REAL> fluxexactneg;
+    
+    //sigma=-K grad(u)
+    
+    {
+        TPZFNMatrix<3,REAL> gradpressure_exact(3,1);
+        for (int i=0; i<fDim; i++) {
+            gradpressure_exact(i,0) = du_exact[i];
+        }
+        PermTensor.Multiply(gradpressure_exact,fluxexactneg);
+    }
+    
+    
+    REAL innerexact = 0.;
+    //REAL innerestimate = 0.;
+    for (int i=0; i<fDim; i++) {
+        for (int j=0; j<fDim; j++) {
+            innerexact += (fluxfem[i]+fluxexactneg(i,0))*InvPermTensor(i,j)*(fluxfem[j]+fluxexactneg(j,0));//Pq esta somando: o fluxo fem esta + e o exato -
+//            innerestimate += (fluxfem[i]-fluxreconstructed[i])*InvPermTensor(i,j)*(fluxfem[j]-fluxreconstructed[j]);
+        }
+    }
+    errors[0] = (pressurefem[0]-u_exact[0])*(pressurefem[0]-u_exact[0]);//exact error pressure
+    
+    TPZManVector<STATE,3> gradpressure(3,0.);
+    this->Solution(data,VariableIndex("GradPressureFem"), gradpressure);
+    REAL errogradpressure = 0.;
+    for (int i=0; i<fDim; i++) {
+//        for (int j=0; j<fDim; j++) {
+//            errogradpressure += (gradpressure[i] - du_exact(i,0))*PermTensor(i,j)*(gradpressure[i] - du_exact(j,0));
+//        }
+        errogradpressure += (gradpressure[i] - du_exact(i,0))*(gradpressure[i] - du_exact(i,0));
+    }
+
+    errors[1] = errogradpressure;
+    errors[2] = errors[0] + errors[1];
+    
+    errors[3] = innerexact;//error flux exact
+    errors[4] = errodivsigma; //||f - Proj_divsigma||
+}

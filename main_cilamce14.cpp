@@ -99,9 +99,12 @@ int main(int argc, char *argv[])
     TLaplaceExample1 example;
     config.exact.fExact = example.ESinSin;
     config.Iscontinuouspressure = true;
+    TPZManVector<int, 4> bcmaterialids(4,-1);
+    config.bcmaterialids.insert(-1);
+    
 
     
-    for(int p = 1; p<2; p++)
+    for(int p = 2; p<3; p++)
     {
         config.porder = p;
         config.orderp = p;
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-        for (int ndiv = 2; ndiv < 5; ndiv++)
+        for (int ndiv = 2; ndiv <3; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -132,7 +135,13 @@ int main(int argc, char *argv[])
             }
             else
             {
-                gmesh = CreateGeoMesh(1);
+//                gmesh = CreateGeoMesh(1);
+                TPZManVector<int,4> bcids(4,-1);
+                gmesh = CreateGeoMesh(1, bcids);
+                config.materialids.insert(1);
+                config.bcmaterialids.insert(-1);
+                config.gmesh = gmesh;
+                gmesh->SetDimension(config.dimension);
                 ofstream arg("gmesh1.txt");
                 gmesh->Print(arg);
                 {
@@ -144,16 +153,25 @@ int main(int argc, char *argv[])
                 TPZVTKGeoMesh::PrintGMeshVTK(gmesh, file);
             }
             
-            config.gmesh = gmesh;
-            config.materialids.insert(1);
-            config.bcmaterialids.insert(-1);
-            gmesh->SetDimension(config.dimension);
+//            config.gmesh = gmesh;
+//            config.materialids.insert(1);
+//            config.bcmaterialids.insert(-1);
+//            gmesh->SetDimension(config.dimension);
             
 //            TPZCompMesh *cmesh1 = CMeshFlux(config);//CMeshFlux(pq,gmesh);
 //            ofstream arg1("cmesh_flux.txt");
 //            cmesh1->Print(arg1);
 //
 //            TPZCompMesh *cmesh2 = CMeshPressure(config);//(pp,gmesh);
+//            TPZCompMesh *cmesh1 = CMeshFlux(config);//CMeshFlux(pq,gmesh);
+//            ofstream arg1("cmesh_flux.txt");
+//            cmesh1->Print(arg1);
+//
+//            std::ofstream out2("BuildHdiv.vtk");
+//            TPZVTKGeoMesh::PrintCMeshVTK(cmesh1, out2);
+//
+//            TPZCompMesh *cmesh2 = CMeshPressure(config);//(pp,gmesh);
+
 
 //            ofstream arg2("cmesh_pressure.txt");
 //            cmesh2->Print(arg2);
@@ -196,6 +214,7 @@ int main(int argc, char *argv[])
 //            saidaerro << "Numero de equacoes condensaveis: " <<neqcond_misto<< "\n";
 //            saidaerro << "Numero de equacoes final: " << neq_misto - neqcond_misto<< "\n\n";
 
+
 //            int numthreads = 8;
 //            std::cout << "Number of threads " << numthreads << std::endl;
 //
@@ -204,11 +223,21 @@ int main(int argc, char *argv[])
 //            TPZAnalysis  * an = new TPZAnalysis(mphysics,opti);
 //            ResolverSistema(*an, mphysics,numthreads, true);
 
+//            int numthreads = 0;
+//            std::cout << "Number of threads " << numthreads << std::endl;
+//
+//
+//            bool opti = true;
+//            TPZAnalysis  * an = new TPZAnalysis(mphysics,opti);
+//            ResolverSistema(*an, mphysics,numthreads, true);
+
+
 
 //            ofstream arg5("cmeshmultiphysics.txt");
 //            mphysics->Print(arg5);
 
             //Calculo do erro
+
 //            TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
 //            TPZVec<REAL> erros;
 //
@@ -217,6 +246,16 @@ int main(int argc, char *argv[])
 //
 //            //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
 //            ErrorL22(cmesh2, saidaerro,config);
+
+//            TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
+//            TPZVec<REAL> erros;
+
+            //saidaerro<<"\nErro da simulacao multifisica do fluxo (q)" <<endl;
+           // ErrorHDiv2(cmesh1, saidaerro,config);
+
+            //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
+           // ErrorL22(cmesh2, saidaerro,config);
+
 
             //Plot da solucao aproximada
          //   string plotfile("Solution_mphysics.vtk");

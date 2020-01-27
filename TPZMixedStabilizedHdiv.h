@@ -29,11 +29,6 @@ public:
     
     
     TPZMixedStabilizedHdiv(int matid, int dim);
-    //{
-//        fdelta1 = 0.5;
-//        fdelta2 = 0.5;
-//        fh2 = 1.;
-//    }
     
     TPZMixedStabilizedHdiv();
     
@@ -44,12 +39,18 @@ public:
     virtual ~TPZMixedStabilizedHdiv();
     
     TPZMixedStabilizedHdiv &operator=(const TPZMixedStabilizedHdiv &copy);
-    //{
-//        fdelta1 = copy.fdelta1;
-//        fdelta2 = copy.fdelta2;
-//        fh2 = copy.fh2;
-//    }
+    
+    virtual void FillDataRequirements(TPZVec<TPZMaterialData > &datavec) override;
+    
+    virtual int NEvalErrors() override {return 5;}
     
     virtual void  Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
-
+    
+    int VariableIndex(const std::string &name) override;
+    
+    int NSolutionVariables(int var) override;
+    
+    void Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout) override;
+    
+    virtual void Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> &u_exact, TPZFMatrix<STATE> &du_exact, TPZVec<REAL> &errors) override;
 };
