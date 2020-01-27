@@ -27,7 +27,6 @@ class TPZMixedStabilizedHdiv : public TPZMixedPoisson
 
 public:
     
-    
     TPZMixedStabilizedHdiv(int matid, int dim);
     
     TPZMixedStabilizedHdiv();
