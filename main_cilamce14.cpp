@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     
 
     
-    for(int p = 2; p<3; p++)
+    for(int p = 1; p<2; p++)
     {
         config.porder = p;
         config.orderp = p;
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-        for (int ndiv = 2; ndiv <3; ndiv++)
+        for (int ndiv = 2; ndiv <6; ndiv++)
         {
             config.ndivisions = ndiv;
             

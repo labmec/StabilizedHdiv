@@ -58,7 +58,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 // A((u,p),(v,q)) = (InvKu, v) - (div v,p) - (div u,q)+(div u, div v)-(K gradp,gradq)
 //(f,(v,q)) = -2*(f,q)+(f,div v)
 // */
-//    
+//
     STATE force = ff;
     if(fForcingFunction) {
         TPZManVector<STATE> res(1);
@@ -248,14 +248,13 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         TPZFNMatrix<3,REAL> dphiPuZ(dphiP.Rows(),dphiP.Cols(),0.);
         PermTensor.Multiply(dphiPXY, dphiPuZ);
         
-        REAL umSobreVisc = 1./fvisc;
         for(int ip=0; ip<phrp; ip++)
         {
             for(int jp=0; jp<phrp; jp++)
             {
                 for(int k =0; k<3; k++)
                 {
-                    ek(phrq+ip, phrq+jp) += (-1.)*weight*0.5*umSobreVisc*dphiPuZ(k,ip)*dphiPXY(k,jp);
+                    ek(phrq+ip, phrq+jp) += (-1.)*weight*0.5*dphiPuZ(k,ip)*dphiPXY(k,jp);
                 }
                 
             }
@@ -370,8 +369,7 @@ void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE>
      
      error[0] - eror em norma L2 para a variavel pressao
      error[1] - erro em semi norma H1 para a variavel pressao
-     error[2] - erro em norma H1 <=> norma Energia para a variavel pressao
-     
+     error[2] - erro em norma H1
      error[3] - eror em norma L2 para a variavel fluxo
      error[4] - eror em norma L2 para a variavel divergente do fluxo
      **/
@@ -415,7 +413,6 @@ void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE>
     for (int i=0; i<fDim; i++) {
         for (int j=0; j<fDim; j++) {
             innerexact += (fluxfem[i]+fluxexactneg(i,0))*InvPermTensor(i,j)*(fluxfem[j]+fluxexactneg(j,0));//Pq esta somando: o fluxo fem esta + e o exato -
-//            innerestimate += (fluxfem[i]-fluxreconstructed[i])*InvPermTensor(i,j)*(fluxfem[j]-fluxreconstructed[j]);
         }
     }
     errors[0] = (pressurefem[0]-u_exact[0])*(pressurefem[0]-u_exact[0]);//exact error pressure
@@ -434,5 +431,5 @@ void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE>
     errors[2] = errors[0] + errors[1];
     
     errors[3] = innerexact;//error flux exact
-    errors[4] = errodivsigma; //||f - Proj_divsigma||
+    errors[4] = errodivsigma; //||div(sigma) - div(sigma_h)||
 }

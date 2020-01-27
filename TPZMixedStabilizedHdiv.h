@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#endif /* TPZMixedStabilizedHdiv_hpp */
+
 
 
 /**
@@ -54,3 +54,5 @@ public:
     
     virtual void Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> &u_exact, TPZFMatrix<STATE> &du_exact, TPZVec<REAL> &errors) override;
 };
+
+#endif /* TPZMixedStabilizedHdiv_hpp */
