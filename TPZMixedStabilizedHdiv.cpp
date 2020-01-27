@@ -58,7 +58,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 // A((u,p),(v,q)) = (InvKu, v) - (div v,p) - (div u,q)+(div u, div v)-(K gradp,gradq)
 //(f,(v,q)) = -2*(f,q)+(f,div v)
 // */
-//    
+//
+    
     STATE force = ff;
     if(fForcingFunction) {
         TPZManVector<STATE> res(1);
