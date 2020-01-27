@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     
 
     
-    for(int p = 1; p<2; p++)
+    for(int p = 2; p<3; p++)
     {
         config.porder = p;
         config.orderp = p;
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-        for (int ndiv = 0; ndiv <1; ndiv++)
+        for (int ndiv = 2; ndiv <3; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -220,13 +220,13 @@ int main(int argc, char *argv[])
             TPZVec<REAL> erros;
 
             //saidaerro<<"\nErro da simulacao multifisica do fluxo (q)" <<endl;
-            ErrorHDiv2(cmesh1, saidaerro,config);
+           // ErrorHDiv2(cmesh1, saidaerro,config);
 
             //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
-            ErrorL22(cmesh2, saidaerro,config);
+           // ErrorL22(cmesh2, saidaerro,config);
 
             //Plot da solucao aproximada
-         //   string plotfile("Solution_mphysics.vtk");
+            string plotfile("Solution_mphysics.vtk");
 
             char buf[256] ;
             sprintf(buf,"ProblemaJuanGC_orderp%d_orderq_%d_h%d.vtk",config.orderp,config.orderq,config.ndivisions);

@@ -635,8 +635,8 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config){//(
     
     //criando material
     int dim = gmesh->Dimension();
-    TPZMixedPoisson *material = new TPZMixedPoisson(MatId,dim);
-    
+//    TPZMixedPoisson *material = new TPZMixedPoisson(MatId,dim);
+    TPZMixedStabilizedHdiv *material = new TPZMixedStabilizedHdiv(MatId,dim);
 
     material->SetForcingFunction(config.exact.ForcingFunction());
     material->SetForcingFunctionExact(config.exact.Exact());
@@ -651,10 +651,9 @@ TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config){//(
     if(IsHomogeneo==true){
         TPZFMatrix<REAL> Ktensor(3,3,0.);
         TPZFMatrix<REAL> InvK(3,3,0.);
-
-        TPZFMatrix<REAL> K(3,3,0),invK(3,3,0);
         Ktensor.Identity();
         InvK.Identity();
+        
         material->SetPermeabilityTensor(Ktensor,InvK);
     }
     else{
@@ -812,14 +811,13 @@ TPZFMatrix<STATE> * ComputeInverse(TPZCompMesh * mphysics)
 void PosProcessMultph(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile){
     
     TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
-    TPZManVector<std::string,10> scalnames(3), vecnames(4);
-    vecnames[0]  = "Flux";
-    vecnames[1]  = "GradFluxX";
-    vecnames[2]  = "GradFluxY";
-    vecnames[3]  = "ExactFlux";
-    scalnames[0] = "Pressure";
-    scalnames[1] = "DivFlux";
-    scalnames[2] = "ExactPressure";
+    TPZManVector<std::string,6> scalnames(4), vecnames(2);
+    vecnames[0]  = "FluxFem";
+    vecnames[1]  = "FluxExact";
+    scalnames[0] = "PressureFem";
+    scalnames[1] = "PressureExact";
+    scalnames[2] = "DivFluxFem";
+    scalnames[3] = "DivFluxExact";
     
     
     const int dim = 2;
