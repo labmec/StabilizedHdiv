@@ -1380,10 +1380,21 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
     }
     for (auto matid : problem.bcmaterialids) {
         TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        if(matid==-1){
         int bctype = 0;
         TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
         bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
         cmesh->InsertMaterialObject(bc);
+        }
+        
+        if(matid == -2){
+        int bctype = 1;
+        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+        cmesh->InsertMaterialObject(bc);
+        }
+        
+        
     }
     cmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
    // std::set<int> matid;

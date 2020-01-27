@@ -49,6 +49,8 @@ void TPZMixedStabilizedHdiv::FillDataRequirements(TPZVec<TPZMaterialData > &data
         datavec[i].SetAllRequirements(false);
         datavec[i].fNeedsSol = true;
         datavec[i].fNeedsHSize = false;
+        datavec[i].fNormalVec = true;
+        
     }
 }
 

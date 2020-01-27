@@ -136,10 +136,12 @@ int main(int argc, char *argv[])
             else
             {
 //                gmesh = CreateGeoMesh(1);
-                TPZManVector<int,4> bcids(4,-1);
+                TPZManVector<int,4> bcids(4,-2);
+                bcids[3] = -1;
                 gmesh = CreateGeoMesh(1, bcids);
                 config.materialids.insert(1);
                 config.bcmaterialids.insert(-1);
+                config.bcmaterialids.insert(-2);
                 config.gmesh = gmesh;
                 gmesh->SetDimension(config.dimension);
                 ofstream arg("gmesh1.txt");
