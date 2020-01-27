@@ -149,33 +149,38 @@ int main(int argc, char *argv[])
             config.bcmaterialids.insert(-1);
             gmesh->SetDimension(config.dimension);
             
-            TPZCompMesh *cmesh1 = CMeshFlux(config);//CMeshFlux(pq,gmesh);
-            ofstream arg1("cmesh_flux.txt");
-            cmesh1->Print(arg1);
-            
-            TPZCompMesh *cmesh2 = CMeshPressure(config);//(pp,gmesh);
+//            TPZCompMesh *cmesh1 = CMeshFlux(config);//CMeshFlux(pq,gmesh);
+//            ofstream arg1("cmesh_flux.txt");
+//            cmesh1->Print(arg1);
+//
+//            TPZCompMesh *cmesh2 = CMeshPressure(config);//(pp,gmesh);
 
-            ofstream arg2("cmesh_pressure.txt");
-            cmesh2->Print(arg2);
+//            ofstream arg2("cmesh_pressure.txt");
+//            cmesh2->Print(arg2);
 
             //malha multifisica
-            TPZVec<TPZCompMesh *> meshvec(2);
-            meshvec[0] = cmesh1;
-            meshvec[1] = cmesh2;
-            TPZCompMesh * mphysics = CMeshMixed(meshvec,config);//CMeshMixed(meshvec,gmesh);
+//            TPZVec<TPZCompMesh *> meshvec(2);
+//            meshvec[0] = cmesh1;
+//            meshvec[1] = cmesh2;
+//            TPZCompMesh * mphysics = CMeshMixed(meshvec,config);//CMeshMixed(meshvec,gmesh);
             
+            TPZMultiphysicsCompMesh *mphysics = CreateMultiphysicsMesh(config);
+            
+              mphysics->InitializeBlock();
+            
+            SolveStabilizedProblem(mphysics, config);
             
 
 //            mphysics->ExpandSolution();
 //            mphysics->CleanUpUnconnectedNodes();
             
-            ofstream arg4("cmesh_mixed.txt");
-            mphysics->Print(arg4);
+//            ofstream arg4("cmesh_mixed.txt");
+//            mphysics->Print(arg4);
 
-            saidaerro << "Number of equations of flux " << cmesh1->NEquations() << std::endl;
-            saidaerro << "Number of equations of pressure " << cmesh2->NEquations() << std::endl;
-            saidaerro << "Number of equations TOTAL " << cmesh1->NEquations()+cmesh2->NEquations()<<std::endl;
-            saidaerro << "Number of equations CONDENSADAS " << mphysics->NEquations() << "\n\n";
+//            saidaerro << "Number of equations of flux " << cmesh1->NEquations() << std::endl;
+//            saidaerro << "Number of equations of pressure " << cmesh2->NEquations() << std::endl;
+//            saidaerro << "Number of equations TOTAL " << cmesh1->NEquations()+cmesh2->NEquations()<<std::endl;
+//            saidaerro << "Number of equations CONDENSADAS " << mphysics->NEquations() << "\n\n";
 
 //            long neq_flux, neq_pres, neqcond_flux, neqcond_pres;
 //           // NEquationsCondensed(cmesh1, neq_flux, neqcond_flux);
@@ -191,35 +196,35 @@ int main(int argc, char *argv[])
 //            saidaerro << "Numero de equacoes condensaveis: " <<neqcond_misto<< "\n";
 //            saidaerro << "Numero de equacoes final: " << neq_misto - neqcond_misto<< "\n\n";
 
-            int numthreads = 8;
-            std::cout << "Number of threads " << numthreads << std::endl;
-
-
-            bool opti = true;
-            TPZAnalysis  * an = new TPZAnalysis(mphysics,opti);
-            ResolverSistema(*an, mphysics,numthreads, true);
+//            int numthreads = 8;
+//            std::cout << "Number of threads " << numthreads << std::endl;
+//
+//
+//            bool opti = true;
+//            TPZAnalysis  * an = new TPZAnalysis(mphysics,opti);
+//            ResolverSistema(*an, mphysics,numthreads, true);
 
 
 //            ofstream arg5("cmeshmultiphysics.txt");
 //            mphysics->Print(arg5);
 
             //Calculo do erro
-            TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
-            TPZVec<REAL> erros;
-
-            //saidaerro<<"\nErro da simulacao multifisica do fluxo (q)" <<endl;
-            ErrorHDiv2(cmesh1, saidaerro,config);
-
-            //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
-            ErrorL22(cmesh2, saidaerro,config);
+//            TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
+//            TPZVec<REAL> erros;
+//
+//            //saidaerro<<"\nErro da simulacao multifisica do fluxo (q)" <<endl;
+//            ErrorHDiv2(cmesh1, saidaerro,config);
+//
+//            //saidaerro<<"\nErro da simulacao multifisica da pressao (p)" <<endl;
+//            ErrorL22(cmesh2, saidaerro,config);
 
             //Plot da solucao aproximada
          //   string plotfile("Solution_mphysics.vtk");
 
-            char buf[256] ;
-            sprintf(buf,"ProblemaJuanGC_orderp%d_orderq_%d_h%d.vtk",config.orderp,config.orderq,config.ndivisions);
-            PosProcessMultph(meshvec,  mphysics, *an, buf);
-
+//            char buf[256] ;
+//            sprintf(buf,"ProblemaJuanGC_orderp%d_orderq_%d_h%d.vtk",config.orderp,config.orderq,config.ndivisions);
+//            PosProcessMultph(meshvec,  mphysics, *an, buf);
+//
         }
 
     }
