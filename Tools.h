@@ -74,7 +74,7 @@ TPZCompMesh *CMeshPressure(int pOrder,TPZGeoMesh *gmesh);
 TPZCompMesh *CMeshPressure(ProblemConfig &config);
 TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,TPZGeoMesh * gmesh);
 TPZCompMesh *CMeshMixed(TPZVec<TPZCompMesh *> meshvec,ProblemConfig &config);
-TPZMultiphysicsCompMesh *CreateHDivMesh(ProblemConfig &problem);
+TPZMultiphysicsCompMesh *CreateMultiphysicsMesh(ProblemConfig &problem);
 
 void RefinamentoUnif(TPZGeoMesh* gmesh, int nDiv);
 void ResolverSistema(TPZAnalysis &an, TPZCompMesh *fCmesh, int numthreads, bool direct);
