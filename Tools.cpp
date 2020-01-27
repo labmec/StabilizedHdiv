@@ -10,6 +10,7 @@
 #include "TPZAnalyticSolution.h"
 #include "TPZMixedStabilizedHdiv.h"
 #include "TPZCompMeshTools.h"
+#include "TPZMixedStabilizedHdiv.h"
 
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("pz.hdiv"));
@@ -1430,11 +1431,14 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     direct = 0;
     an.Assemble();
     an.Solve();//resolve o problema misto ate aqui
-    TPZStack<std::string> scalnames, vecnames;
-    scalnames.Push("Pressure");
-    scalnames.Push("ExactPressure");
-    vecnames.Push("Flux");
-    vecnames.Push("ExactFlux");
+    TPZManVector<std::string,10> scalnames(3), vecnames(4);
+    vecnames[0]  = "Flux";
+    vecnames[1]  = "GradFluxX";
+    vecnames[2]  = "GradFluxY";
+    vecnames[3]  = "ExactFlux";
+    scalnames[0] = "Pressure";
+    scalnames[1] = "DivFlux";
+    scalnames[2] = "ExactPressure";
     
     int dim = config.gmesh->Dimension();
     
@@ -1456,8 +1460,8 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
         //Erro
         
         ofstream myfile;
-        myfile.open("MixedError.txt", ios::app);
-        myfile << "\n\n Error for Mixed formulation " ;
+        myfile.open("ErrorStabilizedProblem.txt", ios::app);
+        myfile << "\n\n Error for Stabilized formulation " ;
         myfile << "\n-------------------------------------------------- \n";
         myfile << "Ndiv = " << config.ndivisions << " Order k = " << config.porder <<"\n";
         myfile << "Energy norm = " << errors[0] << "\n";//norma energia
@@ -1466,4 +1470,52 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
         myfile.close();
         
     }
+}
+
+TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
+   
+    TPZMultiphysicsCompMesh *cmesh = new TPZMultiphysicsCompMesh(problem.gmesh);
+    TPZMaterial *mat = NULL;
+    TPZFMatrix<REAL> K(3,3,0),invK(3,3,0);
+    K.Identity();
+    invK.Identity();
+    
+
+
+//    K.Print(std::cout);
+//    invK.Print(std::cout);
+    
+    for (auto matid : problem.materialids) {
+        TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());//TPZMixedPoisson(matid, cmesh->Dimension());
+        mix->SetForcingFunction(problem.exact.ForcingFunction());
+        mix->SetForcingFunctionExact(problem.exact.Exact());
+        mix->SetPermeabilityTensor(K, invK);
+        
+        if (!mat) mat = mix;
+        
+        cmesh->InsertMaterialObject(mix);
+    }
+    for (auto matid : problem.bcmaterialids) {
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        int bctype = 0;
+        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+        cmesh->InsertMaterialObject(bc);
+    }
+    cmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
+   // std::set<int> matid;
+//    matid.insert(1);
+//    matid.insert(-1);
+    TPZManVector<int> active(2,1);
+    TPZManVector<TPZCompMesh *> meshvector(2,0);
+    
+    meshvector[0] = CMeshFlux(problem);
+    meshvector[1] = CMeshPressure(problem);
+    cmesh->BuildMultiphysicsSpace(active, meshvector);
+    cmesh->LoadReferences();
+    bool keepmatrix = false;
+    bool keeponelagrangian = true;
+    TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
+    
+    return cmesh;
 }
