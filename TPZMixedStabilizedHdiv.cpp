@@ -42,7 +42,22 @@ TPZMixedStabilizedHdiv &TPZMixedStabilizedHdiv::operator=(const TPZMixedStabiliz
     return *this;
 }
 
+<<<<<<< Updated upstream
 
+=======
+//void TPZMixedStabilizedHdiv::FillDataRequirements(TPZVec<TPZMaterialData > &datavec) {
+//    
+//    int nref = datavec.size();
+//    for(int i = 0; i<nref; i++ )
+//    {
+//        datavec[i].SetAllRequirements(false);
+//        datavec[i].fNeedsSol = true;
+//        datavec[i].fNeedsHSize = false;
+//        datavec[i].fNeedsNormal = true;
+//        
+//    }
+//}
+>>>>>>> Stashed changes
 
 void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
 ///*
