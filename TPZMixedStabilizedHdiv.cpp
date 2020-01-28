@@ -8,6 +8,7 @@
 #include "TPZMixedStabilizedHdiv.h"
 #include "pzaxestools.h"
 #include "TPZAnalyticSolution.h"
+#include "pzbndcond.h"
 
 TPZMixedStabilizedHdiv::TPZMixedStabilizedHdiv(int matid, int dim): TPZMixedPoisson(matid,dim)
 {
@@ -41,19 +42,7 @@ TPZMixedStabilizedHdiv &TPZMixedStabilizedHdiv::operator=(const TPZMixedStabiliz
     return *this;
 }
 
-void TPZMixedStabilizedHdiv::FillDataRequirements(TPZVec<TPZMaterialData > &datavec) {
-    
-    int nref = datavec.size();
-    for(int i = 0; i<nref; i++ )
-    {
-        datavec[i].SetAllRequirements(false);
-        datavec[i].fNeedsSol = true;
-        datavec[i].fNeedsHSize = false;
-        datavec[i].fNormalVec = true;
-        datavec[i].fNeedsNormal = true;
-        
-    }
-}
+
 
 void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
 ///*
@@ -82,11 +71,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     TPZFNMatrix<9,REAL> dphiPXY(3,dphiP.Cols());
     TPZAxesTools<REAL>::Axes2XYZ(dphiP, dphiPXY, datavec[1].axes);
     
-    
-//    REAL &faceSize = datavec[0].HSize;
-//    if(fUseHdois==true){
-//        fh2 = faceSize*faceSize;
-//    }else fh2 = 1.;
+
     
     int phrq, phrp;
     phrp = phip.Rows();
@@ -264,6 +249,94 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         }
     //}
 }
+
+void TPZMixedStabilizedHdiv::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
+    
+#ifdef PZDEBUG
+    if (bc.Type() > 2 ) {
+        std::cout << " Erro.!! Neste material utiliza-se apenas condicoes de Neumann e Dirichlet\n";
+        DebugStop();
+    }
+#endif
+    
+    int dim = Dimension();
+    
+    TPZFMatrix<REAL>  &phiQ = datavec[0].phi;
+    int phrq = phiQ.Rows();
+
+    REAL v2 = bc.Val2()(0,0);
+    REAL v1 = bc.Val1()(0,0);
+    if(bc.HasForcingFunction())
+    {
+        TPZManVector<STATE> res(3);
+        TPZFNMatrix<9,STATE> gradu(dim,1);
+        bc.ForcingFunction()->Execute(datavec[0].x,res,gradu);
+        if(bc.Type() == 0)
+        {
+            v2 = res[0];
+        }
+        else if(bc.Type() == 1 || bc.Type() == 2)
+        {
+            TPZFNMatrix<9,REAL> PermTensor, InvPermTensor;
+            GetPermeability(datavec[0].x, PermTensor, InvPermTensor);
+            REAL normflux = 0.;
+            for(int i=0; i<3; i++)
+            {
+                for(int j=0; j<dim; j++)
+                {
+                    normflux -= datavec[0].normal[i]*PermTensor(i,j)*gradu(j,0);
+                }
+            }
+            //v2 = -normflux;
+            if(bc.Type() ==2)
+            {
+                v2 = -res[0]+v2/v1;
+            }
+        }
+        else
+        {
+            DebugStop();
+        }
+    }else
+    {
+        v2 = bc.Val2()(0,0);
+    }
+
+    switch (bc.Type()) {
+        case 0 :        // Dirichlet condition
+            //primeira equacao
+            for(int iq=0; iq<phrq; iq++)
+            {
+                //the contribution of the Dirichlet boundary condition appears in the flow equation
+                ef(iq,0) += (-1.)*v2*phiQ(iq,0)*weight;
+            }
+            break;
+            
+        case 1 :            // Neumann condition
+            //primeira equacao
+            for(int iq=0; iq<phrq; iq++)
+            {
+                ef(iq,0)+= gBigNumber*v2*phiQ(iq,0)*weight;
+                for (int jq=0; jq<phrq; jq++) {
+                    
+                    ek(iq,jq)+= gBigNumber*phiQ(iq,0)*phiQ(jq,0)*weight;
+                }
+            }
+            break;
+        
+        case 2 :            // mixed condition
+            for(int iq = 0; iq < phrq; iq++) {
+                
+                ef(iq,0) += v2*phiQ(iq,0)*weight;
+                for (int jq = 0; jq < phrq; jq++) {
+                    ek(iq,jq) += weight/v1*phiQ(iq,0)*phiQ(jq,0);
+                }
+            }
+            break;
+    }
+    
+}
+
 
 int TPZMixedStabilizedHdiv::VariableIndex(const std::string &name)
 {
