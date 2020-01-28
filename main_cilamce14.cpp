@@ -114,10 +114,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
         for (int ndiv = 1; ndiv <2; ndiv++)
         {
             config.ndivisions = ndiv;
