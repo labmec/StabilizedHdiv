@@ -99,8 +99,9 @@ int main(int argc, char *argv[])
     TLaplaceExample1 example;
     config.exact.fExact = example.ESinSin;
     config.Iscontinuouspressure = true;
-    TPZManVector<int, 4> bcmaterialids(4,-1);
-    config.bcmaterialids.insert(-1);
+//    TPZManVector<int, 4> bcmaterialids(4,-1);
+//    config.bcmaterialids.insert(-1);
+//    config.bcmaterialids.insert(-2);
     
 
     
@@ -113,7 +114,7 @@ int main(int argc, char *argv[])
         int pp = p;
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
-        for (int ndiv = 2; ndiv <6; ndiv++)
+        for (int ndiv = 0; ndiv <1; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -185,17 +186,18 @@ int main(int argc, char *argv[])
 //            TPZCompMesh * mphysics = CMeshMixed(meshvec,config);//CMeshMixed(meshvec,gmesh);
             
             TPZMultiphysicsCompMesh *mphysics = CreateMultiphysicsMesh(config);
+            ofstream arg4("cmesh_mixed.txt");
+            mphysics->Print(arg4);
             
-              mphysics->InitializeBlock();
-            
+            mphysics->InitializeBlock();
             SolveStabilizedProblem(mphysics, config);
             
 
 //            mphysics->ExpandSolution();
 //            mphysics->CleanUpUnconnectedNodes();
             
-//            ofstream arg4("cmesh_mixed.txt");
-//            mphysics->Print(arg4);
+//
+            
 
 //            saidaerro << "Number of equations of flux " << cmesh1->NEquations() << std::endl;
 //            saidaerro << "Number of equations of pressure " << cmesh2->NEquations() << std::endl;

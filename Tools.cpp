@@ -1377,21 +1377,24 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
         if (!mat) mat = mix;
         
         cmesh->InsertMaterialObject(mix);
+        cmesh->SetDimModel(problem.dimension);
     }
     for (auto matid : problem.bcmaterialids) {
-        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
-        if(matid==-1){
-        int bctype = 0;
-        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
-        cmesh->InsertMaterialObject(bc);
+        //TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+        
+        if(matid == -1){
+            int bctype = 0;//dirichlet
+            TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+            bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+            cmesh->InsertMaterialObject(bc);
         }
         
         if(matid == -2){
-        int bctype = 1;
-        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
-        cmesh->InsertMaterialObject(bc);
+            int bctype = 1;//neumann;
+            TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+            bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+            cmesh->InsertMaterialObject(bc);
         }
         
         
@@ -1410,6 +1413,14 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
     bool keepmatrix = false;
     bool keeponelagrangian = true;
     TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
+    
+    
+//    TPZCompMeshTools::GroupElements(cmesh);
+//    bool keepmatrix = false;
+//    bool keeponelagrangian = true;
+//    TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
+//    cmesh->CleanUpUnconnectedNodes();
+//    cmesh->ExpandSolution();
     
     return cmesh;
 }
