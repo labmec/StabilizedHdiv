@@ -282,7 +282,7 @@ void TPZMixedStabilizedHdiv::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
             {
                 for(int j=0; j<dim; j++)
                 {
-                    normflux -= datavec[0].normal[i]*PermTensor(i,j)*gradu(j,0);
+                    normflux += datavec[0].normal[i]*PermTensor(i,j)*gradu(j,0);
                 }
             }
             v2 = -normflux;

@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     
     config.dimension = 2;
     TLaplaceExample1 example;
-    config.exact.fExact = example.ESinSin;//ESinSin;
+    config.exact.fExact = example.ESinSin;
     config.Iscontinuouspressure = true;
 //    TPZManVector<int, 4> bcmaterialids(4,-1);
 //    config.bcmaterialids.insert(-1);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         
         saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
 
-        for (int ndiv = 1; ndiv <2; ndiv++)
+        for (int ndiv = 3; ndiv <4; ndiv++)
         {
             config.ndivisions = ndiv;
             
