@@ -1369,7 +1369,7 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
 //    invK.Print(std::cout);
     
     for (auto matid : problem.materialids) {
-        TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());//TPZMixedPoisson *mix = TPZMixedPoisson(matid, cmesh->Dimension());
+        TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());//TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());//
         mix->SetForcingFunction(problem.exact.ForcingFunction());
         mix->SetForcingFunctionExact(problem.exact.Exact());
         mix->SetPermeabilityTensor(K, invK);

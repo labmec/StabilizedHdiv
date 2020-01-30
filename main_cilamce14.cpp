@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     
     config.dimension = 2;
     TLaplaceExample1 example;
-    config.exact.fExact = example.ESinSin;
+    config.exact.fExact = example.ESinSin;//ESinSin;
     config.Iscontinuouspressure = true;
 //    TPZManVector<int, 4> bcmaterialids(4,-1);
 //    config.bcmaterialids.insert(-1);
@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
                 TPZManVector<int,4> bcids(4,-2);
                // TPZManVector<int,4> bcids(4,-1);
                 bcids[3] = -1;
+                //bcids[1] = -1;
                 gmesh = CreateGeoMesh(1, bcids);
                 config.materialids.insert(1);
                 config.bcmaterialids.insert(-1);//dirichlet

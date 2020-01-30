@@ -285,7 +285,7 @@ void TPZMixedStabilizedHdiv::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
                     normflux -= datavec[0].normal[i]*PermTensor(i,j)*gradu(j,0);
                 }
             }
-            //v2 = -normflux;
+            v2 = -normflux;
             if(bc.Type() ==2)
             {
                 v2 = -res[0]+v2/v1;
@@ -295,7 +295,8 @@ void TPZMixedStabilizedHdiv::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
         {
             DebugStop();
         }
-    }else
+    }
+    else
     {
         v2 = bc.Val2()(0,0);
     }
