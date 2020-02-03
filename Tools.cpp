@@ -45,18 +45,6 @@ bool IsHomogeneo = true;
 
 TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids) {
     
-//    TPZManVector<int> nx(2,nel);
-//    TPZManVector<REAL> x0(3,0.),x1(3,1.);
-//    x1[2] = 0.;
-//    TPZGenGrid gen(nx,x0,x1);
-//    gen.SetRefpatternElements(true);
-//    TPZGeoMesh* gmesh = new TPZGeoMesh;
-//    gen.Read(gmesh);
-//    gen.SetBC(gmesh, 4, BC0);
-//    gen.SetBC(gmesh, 5, BC1);
-//    gen.SetBC(gmesh, 6, BC2);
-//    gen.SetBC(gmesh, 7, BC3);
-    
     TPZManVector<int> nx(2,nel);
     TPZManVector<REAL> x0(3,0.),x1(3,1.);
     x1[2] = 0.;
@@ -72,9 +60,8 @@ TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids) {
     return gmesh;
 }
 
-TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly){
-    
-    
+TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly, TPZVec<int> &bcids){
+
     TPZGeoMesh * gmesh = new TPZGeoMesh;
     
     TPZManVector<REAL,3> x0(3,0.),x1(3,0.);
@@ -89,21 +76,25 @@ TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly){
     //        gengrid.SetZigZagPattern();
 
     gengrid.Read(gmesh);
-    x1[0] = Lx;
-    x1[1] = 0.;
-    gengrid.SetBC(gmesh, x0, x1, BC0);
-    x0 = x1;
-    x1[0] = Lx;
-    x1[1] = Ly;
-    gengrid.SetBC(gmesh, x0, x1, BC1);
-    x0 = x1;
-    x1[0] = 0.;
-    x1[1] = Ly;
-    gengrid.SetBC(gmesh, x0, x1, BC2);
-    x0 = x1;
-    x1[0] = 0.;
-    x1[1] = 0.;
-    gengrid.SetBC(gmesh, x0, x1, BC3);
+    gengrid.SetBC(gmesh, 4, bcids[0]);
+    gengrid.SetBC(gmesh, 5, bcids[1]);
+    gengrid.SetBC(gmesh, 6, bcids[2]);
+    gengrid.SetBC(gmesh, 7, bcids[3]);
+//    x1[0] = Lx;
+//    x1[1] = 0.;
+//    gengrid.SetBC(gmesh, x0, x1, BC0);
+//    x0 = x1;
+//    x1[0] = Lx;
+//    x1[1] = Ly;
+//    gengrid.SetBC(gmesh, x0, x1, BC1);
+//    x0 = x1;
+//    x1[0] = 0.;
+//    x1[1] = Ly;
+//    gengrid.SetBC(gmesh, x0, x1, BC2);
+//    x0 = x1;
+//    x1[0] = 0.;
+//    x1[1] = 0.;
+//    gengrid.SetBC(gmesh, x0, x1, BC3);
     
     return gmesh;
 }

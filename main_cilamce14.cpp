@@ -67,7 +67,7 @@ using namespace std;
 //bool IsFullHdiv2 = true;
 //bool IsHomogeneo2 = false;
 
-bool trapezoidalmesh = false;
+bool trapezoidalmesh = true;
 
 
 //#ifdef LOG4CXX
@@ -89,19 +89,17 @@ int main(int argc, char *argv[])
     std::string outputfile("out");
     
     //ofstream saidaerro( "../erros-hdiv-estab.txt",ios::app);
-    ofstream saidaerro( "erros-hdiv-estab.txt",ios::app);
+    //ofstream saidaerro( "erros-hdiv-estab.txt",ios::app);
     
-    saidaerro<<"\n";
+   // saidaerro<<"\n";
     
     ProblemConfig config;
     
     config.dimension = 2;
     TLaplaceExample1 example;
-    config.exact.fExact = example.ESinSin;
+    config.exact.fExact = example.EX;
     config.Iscontinuouspressure = true;
-//    TPZManVector<int, 4> bcmaterialids(4,-1);
-//    config.bcmaterialids.insert(-1);
-//    config.bcmaterialids.insert(-2);
+
     
 
     
@@ -110,24 +108,30 @@ int main(int argc, char *argv[])
         config.porder = p;
         config.orderp = p;
         config.orderq = p;
-        int pq = p;
-        int pp = p;
-        
-        saidaerro<<"\n CALCULO DO ERRO, COM ORDEM POLINOMIAL pq = " << pq << " e pp = "<< pp <<endl;
 
-        for (int ndiv = 3; ndiv <4; ndiv++)
+
+        for (int ndiv = 2; ndiv <3; ndiv++)
         {
             config.ndivisions = ndiv;
             
-            //std::cout << "p order " << p << " number of divisions " << ndiv << std::endl;
-            
-            saidaerro<<"\n<<<<<< Numero de divisoes uniforme ndiv = " << ndiv <<" >>>>>>>>>>> "<<endl;
+
             
             TPZGeoMesh *gmesh;
            
             if(trapezoidalmesh)
             {
-                gmesh = CreateTrapezoidalMesh(ndiv, ndiv, 1.,1.);
+                int nel= 2*ndiv;
+                TPZManVector<int,4> bcids(4,-2);
+                bcids[3] = -1;
+                gmesh = CreateTrapezoidalMesh(nel, nel, 1.,1.,bcids);
+                
+                config.materialids.insert(1);
+                config.bcmaterialids.insert(-1);//dirichlet
+                config.bcmaterialids.insert(-2);//neumann
+                config.gmesh = gmesh;
+                gmesh->SetDimension(config.dimension);
+                
+                
                 
                 ofstream arg("gmesh_trapez.txt");
                 gmesh->Print(arg);
