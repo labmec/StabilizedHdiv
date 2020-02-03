@@ -30,6 +30,8 @@ struct ProblemConfig
     
     int dimension = 0;
     
+    TPZManVector<REAL> vec_errors;
+    
     STATE alpha=1;
     /// directory where the files will be stored
     std::string dir_name = ".";
@@ -57,7 +59,7 @@ struct ProblemConfig
                                              
                                              dir_name(cp.dir_name),
                                             Iscontinuouspressure(cp.Iscontinuouspressure),
-                                            
+                                            vec_errors(cp.vec_errors),
                                              dimension(cp.dimension)
                                         
                                             
@@ -80,6 +82,8 @@ struct ProblemConfig
         ndivisions = cp.ndivisions;
         
         dir_name = cp.dir_name;
+        
+        vec_errors = cp.vec_errors;
     
         return *this;
     }

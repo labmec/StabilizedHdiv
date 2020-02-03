@@ -97,20 +97,33 @@ int main(int argc, char *argv[])
     
     config.dimension = 2;
     TLaplaceExample1 example;
-    config.exact.fExact = example.EX;
+    //config.exact.fExact = example.EX;
+    config.exact.fExact = example.ESinSin;
     config.Iscontinuouspressure = true;
 
-    
+    int maxp = 2;
+    int maxhref = 5;
 
+    TPZFMatrix<STATE> L2ErrorPressure(maxhref-1,maxp-1,0.);
+    TPZFMatrix<STATE> EnergyErrorPressure(maxhref-1,maxp-1,0.);
+    TPZFMatrix<STATE> L2ErrorFlux(maxhref-1,maxp-1,0.);
+    TPZFMatrix<STATE> L2ErrorDivFlux(maxhref-1,maxp-1,0.);
     
-    for(int p = 1; p<2; p++)
+    TPZFMatrix<STATE> L2ConvergPressure(maxhref-2,maxp-1,0.);
+    TPZFMatrix<STATE> EnergyConvergPressure(maxhref-2,maxp-1,0.);
+    TPZFMatrix<STATE> L2ConvergFlux(maxhref-2,maxp-1,0.);
+    TPZFMatrix<STATE> L2ConvergDivFlux(maxhref-2,maxp-1,0.);
+    
+    config.vec_errors.Resize(4,0.);
+    
+    for(int p = 1; p< maxp; p++)
     {
         config.porder = p;
         config.orderp = p;
         config.orderq = p;
 
 
-        for (int ndiv = 2; ndiv <3; ndiv++)
+        for (int ndiv = 1; ndiv <maxhref; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -180,11 +193,47 @@ int main(int argc, char *argv[])
             
             SolveStabilizedProblem(mphysics, config);
             
+            L2ErrorPressure(ndiv-1,p-1) = config.vec_errors[0];
+            EnergyErrorPressure(ndiv-1,p-1) = config.vec_errors[1];
+            L2ErrorFlux(ndiv-1,p-1) = config.vec_errors[2];
+            L2ErrorDivFlux(ndiv-1,p-1) = config.vec_errors[3];
 
         }
 
     }
 
+    for(int j=0; j<maxp-1; j++){
+        for(int i=0; i<maxhref-2; i++){
+            L2ConvergPressure(i,j) = log(L2ErrorPressure(i+1,j)/L2ErrorPressure(i,j))/log(1./2.);
+            EnergyConvergPressure(i,j) = log(EnergyErrorPressure(i+1,j)/EnergyErrorPressure(i,j))/log(1./2.);
+            L2ConvergFlux(i,j) = log(L2ErrorFlux(i+1,j)/L2ErrorFlux(i,j))/log(1./2.);
+            L2ConvergDivFlux(i,j) = log(L2ErrorDivFlux(i+1,j)/L2ErrorDivFlux(i,j))/log(1./2.);
+        }
+    }
+    
+    ofstream errtable;
+    errtable.open("ErrosConvergencia.txt", ios::app);
+    //std::ofstream errtable("ErrosConvergencia.txt",ios::app)
+    errtable <<"\n\n";
+    if(trapezoidalmesh){
+    errtable <<"RESULTADOS PARA MALHA TRAPEZOIDAL"<<"\n\n";
+    }else{
+         errtable <<"RESULTADOS PARA MALHA QUADRILATERAL"<<"\n\n";
+    }
+    L2ErrorPressure.Print("Error L2 to pressure = ",errtable);
+    L2ConvergPressure.Print("Convergence L2 to pressure = ",errtable);
+    
+    EnergyErrorPressure.Print("Error Energy to pressure  = ",errtable);
+    EnergyConvergPressure.Print("Convergence Energy to pressure = ",errtable);
+    
+    L2ErrorFlux.Print("Error L2 to  flux = ",errtable);
+    L2ConvergFlux.Print("Convergence L2 to  flux = ",errtable);
+    
+    L2ErrorDivFlux.Print("Error L2 to Divflux  = ",errtable);
+    L2ConvergDivFlux.Print("Convergence L2 to Divflux  = ",errtable);
+    errtable <<"--------------------------------------------------"<<"\n";
+    errtable.close();
+    
     return EXIT_SUCCESS;
 }
 

@@ -1318,7 +1318,7 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     
     if(config.exact.Exact())
     {
-        TPZManVector<REAL> errors(4,0.);
+        TPZManVector<REAL> errors(5,0.);
         an.SetThreadsForError(0);
         an.SetExact(config.exact.ExactSolution());
         an.PostProcessError(errors,false);
@@ -1343,6 +1343,11 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
         myfile << "L2 div= " << errors[4] << "\n";
         myfile.close();
         
+        
+        config.vec_errors[0] = errors[0];
+        config.vec_errors[1] = errors[1];
+        config.vec_errors[2] = errors[3];
+        config.vec_errors[3] = errors[4];
     }
 }
 
