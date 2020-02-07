@@ -412,7 +412,7 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     
     
     cmesh->InsertMaterialObject(mat);
-    cmesh->SetDefaultOrder(config.orderp);
+    cmesh->SetDefaultOrder(config.orderq);
     
     ///Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
@@ -1376,8 +1376,8 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
         cmesh->SetDimModel(problem.dimension);
     }
     for (auto matid : problem.bcmaterialids) {
-        //TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
-        TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        //TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
         
         if(matid == -1){
             int bctype = 0;//dirichlet
@@ -1404,6 +1404,15 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
     
     meshvector[0] = CMeshFlux(problem);
     meshvector[1] = CMeshPressure(problem);
+    if(problem.Increase_POrderInternal>0)
+    {
+        TPZCompMeshTools::AdjustFluxPolynomialOrders(meshvector[0], problem.Increase_POrderInternal);
+        TPZCompMeshTools::SetPressureOrders(meshvector[0], meshvector[1]);
+    }
+    {
+        ofstream arg("cmeshFlux.txt");
+        meshvector[0]->Print(arg);
+    }
     cmesh->BuildMultiphysicsSpace(active, meshvector);
     cmesh->LoadReferences();
     bool keepmatrix = false;

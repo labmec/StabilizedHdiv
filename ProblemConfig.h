@@ -30,6 +30,10 @@ struct ProblemConfig
     
     int dimension = 0;
     
+    //aumento da ordem polinomial interna dos elementos do fluxo
+    int Increase_POrderInternal = 0;
+    
+    //vetor com os erros numericos
     TPZManVector<REAL> vec_errors;
     
     STATE alpha=1;
@@ -60,6 +64,7 @@ struct ProblemConfig
                                              dir_name(cp.dir_name),
                                             Iscontinuouspressure(cp.Iscontinuouspressure),
                                             vec_errors(cp.vec_errors),
+                                            Increase_POrderInternal(cp.Increase_POrderInternal),
                                              dimension(cp.dimension)
                                         
                                             
@@ -84,6 +89,8 @@ struct ProblemConfig
         dir_name = cp.dir_name;
         
         vec_errors = cp.vec_errors;
+        
+        Increase_POrderInternal = cp.Increase_POrderInternal;
     
         return *this;
     }

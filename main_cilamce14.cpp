@@ -67,7 +67,7 @@ using namespace std;
 //bool IsFullHdiv2 = true;
 //bool IsHomogeneo2 = false;
 
-bool trapezoidalmesh = true;
+bool trapezoidalmesh = false;
 
 
 //#ifdef LOG4CXX
@@ -99,10 +99,10 @@ int main(int argc, char *argv[])
     TLaplaceExample1 example;
     //config.exact.fExact = example.EX;
     config.exact.fExact = example.ESinSin;
-    config.Iscontinuouspressure = true;
+    config.Iscontinuouspressure = false;
 
-    int maxp = 2;
-    int maxhref = 5;
+    int maxp = 4;
+    int maxhref = 6;
 
     TPZFMatrix<STATE> L2ErrorPressure(maxhref-1,maxp-1,0.);
     TPZFMatrix<STATE> EnergyErrorPressure(maxhref-1,maxp-1,0.);
@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
         config.porder = p;
         config.orderp = p;
         config.orderq = p;
+        config.Increase_POrderInternal = 1;
 
 
         for (int ndiv = 1; ndiv <maxhref; ndiv++)

@@ -102,8 +102,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         
         //Inserindo termo de estabilizacao no termo de fonte
         REAL divqi = 0.;
-//        if(fIsStabilized)
-//        {
+        if(fIsStabilized)
+        {
             //calculando div(qi)
             TPZFNMatrix<3,REAL> axesvec(3,1,0.);
             datavec[0].axes.Multiply(ivec,axesvec);
@@ -112,7 +112,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 divqi += axesvec(iloc,0)*dphiQ(iloc,ishapeind);
             }
             ef(iq, 0) += weight*(0.5*divqi*force);
-        //}
+        }
         
         TPZFNMatrix<3,REAL> ivecZ(3,1,0.);
         TPZFNMatrix<3,REAL> jvecZ(3,1,0.);
@@ -139,8 +139,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             
             
             //Inserindo termos de estabilizacao na matriz do fluxo
-            //if(fIsStabilized==true)
-            //{
+            if(fIsStabilized==true)
+            {
                 //termos de delta1
                 //dot product between uKinv[v]
                 ivecZ.Zero();
@@ -164,7 +164,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                     divqj += axesvec(jloc,0)*dphiQ(jloc,jshapeind);
                 }
                 ek(iq,jq) += weight*0.5*divqi*divqj;
-            //}
+            }
             
         }
     }
@@ -201,8 +201,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             
             
             //Inserindo termo de estabilizacao: delta1
-            //if(fIsStabilized==true)
-            //{
+            if(fIsStabilized==true)
+            {
                 //produto gardPu.Qv
                 REAL dotVGradP = 0.;
                 
@@ -218,7 +218,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 
                 // Estabilizacao delta1 na Matrix BˆT
                 ek(phrq+jp,iq) += integration;
-            //}
+            }
         }
     }
     
@@ -228,8 +228,8 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     }
     
     //Contribution for estabilization delta1 for gradPu*gradPv. Matrix D
-   // if(fIsStabilized==true)
-    //{
+    if(fIsStabilized==true)
+    {
         //produto KgradPu x KgradPv
         TPZFNMatrix<3,REAL> dphiPuZ(dphiP.Rows(),dphiP.Cols(),0.);
         PermTensor.Multiply(dphiPXY, dphiPuZ);
@@ -245,7 +245,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 
             }
         }
-    //}
+    }
 }
 
 void TPZMixedStabilizedHdiv::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
