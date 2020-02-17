@@ -68,6 +68,7 @@ using namespace std;
 //bool IsHomogeneo2 = false;
 
 bool trapezoidalmesh = true;
+bool problemStab = false;
 
 
 //#ifdef LOG4CXX
@@ -98,19 +99,32 @@ int main(int argc, char *argv[])
     config.dimension = 2;
     TLaplaceExample1 example;
     config.exact.fExact = example.EX;
-    config.Iscontinuouspressure = true;
+    
+    if(problemStab){
+    
+        config.Iscontinuouspressure = true;
+        pztopology::TPZQuadrilateral::SetHdivType(pztopology::TPZQuadrilateral::HdivFull);//HdivConform ou HdivFull
+    }
+    
+    else{
+        config.Iscontinuouspressure = false;
+        pztopology::TPZQuadrilateral::SetHdivType(pztopology::TPZQuadrilateral::HdivConform);//HdivConform ou HdivFull
+    }
 
     
 
     
-    for(int p = 1; p<2; p++)
+    for(int p = 2; p<3; p++)
     {
         config.porder = p;
         config.orderp = p;
         config.orderq = p;
+        if(!problemStab){
+            config.hdivmaismais = 1;
+        }
 
 
-        for (int ndiv = 2; ndiv <3; ndiv++)
+        for (int ndiv = 1; ndiv <6; ndiv++)
         {
             config.ndivisions = ndiv;
             
@@ -142,9 +156,9 @@ int main(int argc, char *argv[])
             else
             {
 //                gmesh = CreateGeoMesh(1);
-                TPZManVector<int,4> bcids(4,-2);
+                TPZManVector<int,4> bcids(4,-1);
                // TPZManVector<int,4> bcids(4,-1);
-                bcids[3] = -1;
+               // bcids[3] = -1;
                 //bcids[1] = -1;
                 gmesh = CreateGeoMesh(1, bcids);
                 config.materialids.insert(1);

@@ -23,6 +23,7 @@ struct ProblemConfig
     int orderp = 1;
     int orderq = 1;
     bool Iscontinuouspressure = true;
+    int hdivmaismais =0;
 
     
     /// number of uniform refinements applied to the mesh
@@ -54,11 +55,9 @@ struct ProblemConfig
                                              bcmaterialids(cp.bcmaterialids),
                                              exact(cp.exact),
                                              ndivisions(cp.ndivisions),
-                                             
-                                             dir_name(cp.dir_name),
                                             Iscontinuouspressure(cp.Iscontinuouspressure),
                                             
-                                             dimension(cp.dimension)
+                                             dimension(cp.dimension),hdivmaismais(cp.hdivmaismais),dir_name(cp.dir_name)
                                         
                                             
     {
@@ -78,6 +77,7 @@ struct ProblemConfig
         Iscontinuouspressure = cp.Iscontinuouspressure;
 
         ndivisions = cp.ndivisions;
+        hdivmaismais = cp.hdivmaismais;
         
         dir_name = cp.dir_name;
     

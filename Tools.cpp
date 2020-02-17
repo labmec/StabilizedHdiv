@@ -11,6 +11,7 @@
 #include "TPZMixedStabilizedHdiv.h"
 #include "TPZCompMeshTools.h"
 #include "TPZMixedStabilizedHdiv.h"
+#include "TPZvecL2.h"
 
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("pz.hdiv"));
@@ -400,19 +401,28 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     /// criar materiais
     int dim = config.dimension;
     TPZGeoMesh *gmesh = config.gmesh;
-    TPZMatPoisson3d *material;
-    material = new TPZMatPoisson3d(MatId,dim);
-    TPZMaterial * mat(material);
-    material->NStateVariables();
-    
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
+    
+    TPZMaterial *mat = NULL;
+    
+    config.gmesh->ResetReference();
+    for (auto matid : config.materialids) {
+        TPZVecL2 *mix = new TPZVecL2(matid);
+        mix->SetDimension(dim);
+        if (!mat) mat = mix;
+        cmesh->InsertMaterialObject(mix);
+    }
+    
+    
     cmesh->SetDimModel(dim);
     
-    cmesh->SetAllCreateFunctionsHDiv();
-    
-    
-    cmesh->InsertMaterialObject(mat);
+    cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(dim);
+//    if(config.Iscontinuouspressure){
     cmesh->SetDefaultOrder(config.orderp);
+//    }
+//    else{
+//      cmesh->SetDefaultOrder(config.orderp+config.hdivmaismais);
+//    }
     
     ///Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
@@ -421,6 +431,13 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     for (auto matid : config.bcmaterialids) {
          TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
          int bctype = 0;
+        if(matid == -1){
+            bctype = 0;
+        }
+        if(bctype ==-2){
+            bctype = 1;
+        }
+        
          TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
          bc->TPZMaterial::SetForcingFunction(config.exact.Exact());
          cmesh->InsertMaterialObject(bc);
@@ -430,8 +447,24 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     
     cmesh->SetDimModel(config.dimension);
     cmesh->AutoBuild();//Ajuste da estrutura de dados computacional
+    if (!config.Iscontinuouspressure) {
+           int64_t nel = cmesh->NElements();
+           for (int64_t el = 0; el < nel; el++) {
+               TPZCompEl *cel = cmesh->Element(el);
+               TPZGeoEl *gel = cel->Reference();
+               if (gel->Dimension() == dim) {
+                   int side = gel->NSides() - 1;
+                   TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *> (cel);
+                   intel->SetSideOrder(side, config.porder + config.hdivmaismais);//seta ordem +hdivmais
+                   intel->SetPreferredOrder(config.porder+config.hdivmaismais);
+               }
+           }
+    
+       }
+    
     cmesh->AdjustBoundaryElements();
-    cmesh->CleanUpUnconnectedNodes();
+    //cmesh->CleanUpUnconnectedNodes();
+    cmesh->InitializeBlock();
     
     //#ifdef LOG4CXX
     //    if(logdata->isDebugEnabled())
@@ -455,25 +488,28 @@ TPZCompMesh *CMeshPressure(ProblemConfig &config)//(int pOrder,TPZGeoMesh *gmesh
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }
-    
-    cmesh->SetDefaultOrder(config.orderp);
-    cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
     if(config.Iscontinuouspressure){
+        cmesh->SetDefaultOrder(config.orderp);
+        cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
         cmesh->AutoBuild();
         cmesh->AdjustBoundaryElements();
         cmesh->CleanUpUnconnectedNodes();
     }
     else{
+        
+        cmesh->SetDefaultOrder(config.porder+config.hdivmaismais);
+        cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
         cmesh->ApproxSpace().CreateDisconnectedElements(true);
         cmesh->AutoBuild();
         int64_t n_connects = cmesh->NConnects();
         for (int64_t i = 0; i < n_connects; ++i) {
             cmesh->ConnectVec()[i].SetLagrangeMultiplier(1);
         }
-
+        
     }
     
-    
+
+
 
     return cmesh;
 }
@@ -1298,13 +1334,22 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     direct = 0;
     an.Assemble();
     an.Solve();//resolve o problema misto ate aqui
-     TPZManVector<std::string,6> scalnames(4), vecnames(2);
-    vecnames[0]  = "FluxFem";
-    vecnames[1]  = "FluxExact";
-    scalnames[0] = "PressureFem";
-    scalnames[1] = "PressureExact";
-    scalnames[2] = "DivFluxFem";
-    scalnames[3] = "DivFluxExact";
+    //
+    TPZStack<std::string> scalnames, vecnames;
+    if(config.Iscontinuouspressure){
+        vecnames.Push("FluxFem");
+        vecnames.Push("FluxExact");
+        scalnames.Push("PressureFem");
+        scalnames.Push("PressureExact");
+        scalnames.Push("DivFluxFem");
+        scalnames.Push("DivFluxExact");
+    }
+    else{
+        scalnames.Push("Pressure");
+        scalnames.Push("ExactPressure");
+        vecnames.Push("Flux");
+        vecnames.Push("ExactFlux");
+    }
     
     int dim = config.gmesh->Dimension();
     
@@ -1316,6 +1361,45 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     int resolution=2;
     an.PostProcess(resolution,dim);
     
+    REAL h_max=0;
+    REAL h;
+    {
+    
+            int nel = config.gmesh->NElements();
+            
+            TPZVec<REAL> vecH(nel,0);
+            
+            int count=0;
+            for (int64_t iel = 0; iel < nel; iel++) {
+                TPZGeoEl * gel = config.gmesh->Element(iel);
+
+                if (gel->Dimension() != config.gmesh->Dimension() || gel->HasSubElement() == 1) {
+                    continue;
+                }
+                
+                h = gel->CharacteristicSize();
+                
+                std::cout << "h= " <<h<<std::endl;
+
+                vecH[count]=h;
+                count ++;
+                
+            }
+            
+            int nvec= vecH.NElements();
+
+            
+            for(int j=0;j< nvec;j++){
+                if( vecH[j]>h_max){
+                    h_max=vecH[j];
+                    //  std::cout << "h= " <<h_max<< std::endl;
+                    
+                }
+            }
+            
+            std::cout << "h= " <<h_max<< std::endl;
+    }
+    
     if(config.exact.Exact())
     {
         TPZManVector<REAL> errors(4,0.);
@@ -1325,22 +1409,23 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
         
         //Erro
         
-//        error[0] - eror em norma L2 para a variavel pressao
-//        error[1] - erro em semi norma H1 para a variavel pressao
-//        error[2] - erro em norma H1
-//        error[3] - eror em norma L2 para a variavel fluxo
-//        error[4] - eror em norma L2 para a variavel divergente do fluxo
+//[0] L2 for pressure
+//[1] L2 for flux
+//[2] L2 for div(flux)
+//[3] Grad pressure (Semi H1)
+//[4] Hdiv norm
         
         ofstream myfile;
         myfile.open("ErrorStabilizedProblem.txt", ios::app);
         myfile << "\n\n Error for Stabilized formulation " ;
         myfile << "\n-------------------------------------------------- \n";
-        myfile << "Ndiv = " << config.ndivisions << " Order k = " << config.porder <<"\n";
+        myfile << "Ndiv = " << config.ndivisions << " hmax = "<<h_max<<" Order k = " << config.porder <<"order n = "<<config.hdivmaismais<<"\n";
+        myfile <<"Ndofs "<<cmesh->NEquations()<<"\n";
         myfile << "L2 norm pressure= " << errors[0] << "\n";
-        myfile << "Energy norm = " << errors[1] << "\n";
-        myfile << "Norm H1 pressure = " << errors[2] << "\n";
-        myfile << "L2 flux = " << errors[3] << "\n";
-        myfile << "L2 div= " << errors[4] << "\n";
+        myfile << "L2 for flux = " << errors[1] << "\n";
+        myfile << "L2 for div(flux) = " << errors[2] << "\n";
+        myfile << "L2 for grad pressure = " << errors[3] << "\n";
+        myfile << "LHdiv norm= " << errors[4] << "\n";
         myfile.close();
         
     }
@@ -1353,47 +1438,53 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
     TPZFMatrix<REAL> K(3,3,0),invK(3,3,0);
     K.Identity();
     invK.Identity();
-    
 
-
-//    K.Print(std::cout);
-//    invK.Print(std::cout);
     
     for (auto matid : problem.materialids) {
-        TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());//TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());//
-        mix->SetForcingFunction(problem.exact.ForcingFunction());
-        mix->SetForcingFunctionExact(problem.exact.Exact());
-        mix->SetPermeabilityTensor(K, invK);
+        if(problem.Iscontinuouspressure){
         
-        if (!mat) mat = mix;
+        TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());
+            mix->SetForcingFunction(problem.exact.ForcingFunction());
+            mix->SetForcingFunctionExact(problem.exact.Exact());
+            mix->SetPermeabilityTensor(K, invK);
+            mix->SetStabilizedMethod();
+            
+            if (!mat) mat = mix;
+             cmesh->InsertMaterialObject(mix);
+        }
+        else{
+            TPZMixedPoisson *mix = new TPZMixedPoisson(matid,cmesh->Dimension());
+            mix->SetForcingFunction(problem.exact.ForcingFunction());
+            mix->SetForcingFunctionExact(problem.exact.Exact());
+            mix->SetPermeabilityTensor(K, invK);
+            
+            if (!mat) mat = mix;
+             cmesh->InsertMaterialObject(mix);
+        }
+
         
-        cmesh->InsertMaterialObject(mix);
+       
         cmesh->SetDimModel(problem.dimension);
     }
     for (auto matid : problem.bcmaterialids) {
         //TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
         TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
-        
+        int bctype;
         if(matid == -1){
-            int bctype = 0;//dirichlet
-            TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-            bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
-            cmesh->InsertMaterialObject(bc);
+            bctype = 0;//dirichlet
         }
         
         if(matid == -2){
-            int bctype = 1;//neumann;
-            TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-            bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
-            cmesh->InsertMaterialObject(bc);
+            bctype = 1;//neumann;
         }
+        
+        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        bc->TPZMaterial::SetForcingFunction(problem.exact.Exact());
+        cmesh->InsertMaterialObject(bc);
         
         
     }
     cmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
-   // std::set<int> matid;
-//    matid.insert(1);
-//    matid.insert(-1);
     TPZManVector<int> active(2,1);
     TPZManVector<TPZCompMesh *> meshvector(2,0);
     
@@ -1401,17 +1492,15 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
     meshvector[1] = CMeshPressure(problem);
     cmesh->BuildMultiphysicsSpace(active, meshvector);
     cmesh->LoadReferences();
-    bool keepmatrix = false;
-    bool keeponelagrangian = true;
-    TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
-    
-    
-//    TPZCompMeshTools::GroupElements(cmesh);
 //    bool keepmatrix = false;
 //    bool keeponelagrangian = true;
 //    TPZCompMeshTools::CreatedCondensedElements(cmesh, keeponelagrangian, keepmatrix);
-//    cmesh->CleanUpUnconnectedNodes();
-//    cmesh->ExpandSolution();
+    
+    
     
     return cmesh;
 }
+
+
+
+
