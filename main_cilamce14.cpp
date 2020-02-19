@@ -68,7 +68,7 @@ using namespace std;
 //bool IsHomogeneo2 = false;
 
 bool trapezoidalmesh = true;
-bool problemStab = false;
+bool problemStab = true;
 
 
 //#ifdef LOG4CXX
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     
     config.dimension = 2;
     TLaplaceExample1 example;
-    config.exact.fExact = example.EX;
+    config.exact.fExact = example.ESinSin;
     
     if(problemStab){
     
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     
 
     
-    for(int p = 2; p<3; p++)
+    for(int p = 1; p<2; p++)
     {
         config.porder = p;
         config.orderp = p;

@@ -417,12 +417,8 @@ TPZCompMesh *CMeshFlux(ProblemConfig &config)
     cmesh->SetDimModel(dim);
     
     cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(dim);
-//    if(config.Iscontinuouspressure){
     cmesh->SetDefaultOrder(config.orderp);
-//    }
-//    else{
-//      cmesh->SetDefaultOrder(config.orderp+config.hdivmaismais);
-//    }
+
     
     ///Inserir condicao de contorno
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
@@ -497,7 +493,8 @@ TPZCompMesh *CMeshPressure(ProblemConfig &config)//(int pOrder,TPZGeoMesh *gmesh
     }
     else{
         
-        cmesh->SetDefaultOrder(config.porder+config.hdivmaismais);
+        cmesh->SetDefaultOrder(config.porder + config.hdivmaismais);
+        //cmesh->SetDefaultOrder(config.orderp);
         cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
         cmesh->ApproxSpace().CreateDisconnectedElements(true);
         cmesh->AutoBuild();
@@ -1336,26 +1333,33 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     an.Solve();//resolve o problema misto ate aqui
     //
     TPZStack<std::string> scalnames, vecnames;
-    if(config.Iscontinuouspressure){
+ //   if(config.Iscontinuouspressure){
         vecnames.Push("FluxFem");
         vecnames.Push("FluxExact");
         scalnames.Push("PressureFem");
         scalnames.Push("PressureExact");
         scalnames.Push("DivFluxFem");
         scalnames.Push("DivFluxExact");
-    }
-    else{
-        scalnames.Push("Pressure");
-        scalnames.Push("ExactPressure");
-        vecnames.Push("Flux");
-        vecnames.Push("ExactFlux");
-    }
+  //  }
+//    else{
+//        scalnames.Push("Pressure");
+//        scalnames.Push("ExactPressure");
+//        vecnames.Push("Flux");
+//        vecnames.Push("ExactFlux");
+//    }
     
     int dim = config.gmesh->Dimension();
     
     std::stringstream sout;
     
-    sout << config.dir_name << "/"  "StabProblem_"<<config.problemname<<"OrderP"<< config.orderp<<"OrderQ"<<config.orderq<<"Nref_"<<config.ndivisions<<".vtk";
+   // if(config.Iscontinuouspressure){
+         sout << config.dir_name << "/"  "Stabformulation_"<<config.problemname<<"OrderP"<< config.orderp<<"OrderQ"<<config.orderq<<"Nref_"<<config.ndivisions<<".vtk";
+  //  }
+//    else{
+//            sout << config.dir_name << "/"  "CompatibleL2_"<<config.problemname<<"OrderP"<< config.orderp<<"OrderQ"<<config.orderq<<"Nref_"<<config.ndivisions<<".vtk";
+//    }
+    
+
     
     an.DefineGraphMesh(dim, scalnames, vecnames, sout.str());
     int resolution=2;
@@ -1409,23 +1413,34 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
         
         //Erro
         
-//[0] L2 for pressure
-//[1] L2 for flux
-//[2] L2 for div(flux)
-//[3] Grad pressure (Semi H1)
-//[4] Hdiv norm
+//error[0] - L2 for pressure
+//error[1] - L2 for flux
+//error[2] - L2 for div
+//error[3] - L2 for grad p
+//error[4] - Hdiv norm
         
         ofstream myfile;
-        myfile.open("ErrorStabilizedProblem.txt", ios::app);
-        myfile << "\n\n Error for Stabilized formulation " ;
-        myfile << "\n-------------------------------------------------- \n";
+        
+        if(config.Iscontinuouspressure){
+            myfile.open("ErrorStabilizedProblem.txt", ios::app);
+            myfile << "\n\n Error using Stabilized formulation and pressure in H1" ;
+             myfile << "\n-------------------------------------------------- \n";
+        }
+        else{
+            myfile.open("ErrorPressureL2.txt", ios::app);
+            
+            myfile << "\n\n Error using compatible formulation and pressure in L2" ;
+             myfile << "\n-------------------------------------------------- \n";
+        }
+        
+
         myfile << "Ndiv = " << config.ndivisions << " hmax = "<<h_max<<" Order k = " << config.porder <<"order n = "<<config.hdivmaismais<<"\n";
         myfile <<"Ndofs "<<cmesh->NEquations()<<"\n";
         myfile << "L2 norm pressure= " << errors[0] << "\n";
         myfile << "L2 for flux = " << errors[1] << "\n";
-        myfile << "L2 for div(flux) = " << errors[2] << "\n";
-        myfile << "L2 for grad pressure = " << errors[3] << "\n";
-        myfile << "LHdiv norm= " << errors[4] << "\n";
+        myfile << "L2 for div = " << errors[2] << "\n";
+        myfile << "L2 for grad p = " << errors[3] << "\n";
+        myfile << "Hdiv norm = " << errors[4] << "\n";
         myfile.close();
         
     }
@@ -1441,29 +1456,20 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
 
     
     for (auto matid : problem.materialids) {
-        if(problem.Iscontinuouspressure){
         
         TPZMixedStabilizedHdiv *mix = new TPZMixedStabilizedHdiv(matid, cmesh->Dimension());
             mix->SetForcingFunction(problem.exact.ForcingFunction());
             mix->SetForcingFunctionExact(problem.exact.Exact());
             mix->SetPermeabilityTensor(K, invK);
+           // mix->SetStabilizedMethod();
+
+            if (!mat) mat = mix;
+             cmesh->InsertMaterialObject(mix);
+        
+        if(problem.Iscontinuouspressure){
             mix->SetStabilizedMethod();
-            
-            if (!mat) mat = mix;
-             cmesh->InsertMaterialObject(mix);
-        }
-        else{
-            TPZMixedPoisson *mix = new TPZMixedPoisson(matid,cmesh->Dimension());
-            mix->SetForcingFunction(problem.exact.ForcingFunction());
-            mix->SetForcingFunctionExact(problem.exact.Exact());
-            mix->SetPermeabilityTensor(K, invK);
-            
-            if (!mat) mat = mix;
-             cmesh->InsertMaterialObject(mix);
         }
 
-        
-       
         cmesh->SetDimModel(problem.dimension);
     }
     for (auto matid : problem.bcmaterialids) {

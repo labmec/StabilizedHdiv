@@ -56,6 +56,12 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         force = res[0];
     }
     
+    REAL &faceSize = datavec[0].HSize;
+
+    if(fUseHdois==true){
+        fh2 = faceSize*faceSize;
+    }
+    
     TPZFNMatrix<9,REAL> PermTensor;
     TPZFNMatrix<9,REAL> InvPermTensor;
     
@@ -103,18 +109,11 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         }
 
         //Inserindo termo de estabilizacao no termo de fonte
-        REAL divqi = 0.;
+
         if(fIsStabilized)
         {
-            //calculando div(qi)
-//            TPZFNMatrix<3,REAL> axesvec(3,1,0.);
-//            datavec[0].axes.Multiply(ivec,axesvec);
-//            for(int iloc=0; iloc<fDim; iloc++)
-//            {
-//                divqi += axesvec(iloc,0)*dphiQ(iloc,ishapeind);
-//            }
 
-            ef(iq, 0) += weight*(0.5*divphi(iq,0)*force);//weight*(0.5*divqi*force);
+            ef(iq, 0) += weight*(0.5*divphi(iq,0)*force);
         }
 
         TPZFNMatrix<3,REAL> ivecZ(3,1,0.);
@@ -145,7 +144,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             if(fIsStabilized==true)
             {
                 //termos de delta1
-                //dot product between uKinv[v]
+                //dot product between (-1/2)h^2 uKinv[v]
                 ivecZ.Zero();
                 for(int id=0; id<fDim; id++){
                     for(int jd=0; jd<fDim; jd++){
@@ -154,19 +153,11 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                 }
                 //ivecZ.Print("mat2 = ");
                 REAL prod2 = ivecZ(0,0)*jvec(0,0) + ivecZ(1,0)*jvec(1,0) + ivecZ(2,0)*jvec(2,0);
-                ek(iq,jq) += (-1.)*weight*0.5*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod2;
+                ek(iq,jq) += (-0.5)*fh2*weight*phiQ(ishapeind,0)*phiQ(jshapeind,0)*prod2;
 
 
                 //termos de delta2: //dot product between divQu.divQv
-  //              REAL divqj = 0.;
-  //              TPZFNMatrix<3,REAL> axesvec(3,1,0.);
-  //              datavec[0].axes.Multiply(jvec,axesvec);
-                //calculando div(qj)
-//                for(int jloc=0; jloc<fDim; jloc++)
-//                {
-//                    divqj += axesvec(jloc,0)*dphiQ(jloc,jshapeind);
-//                }
-                ek(iq,jq) += weight*0.5*divphi(iq,0)*divphi(jq,0);//weight*0.5*divqi*divqj;
+                ek(iq,jq) +=(1)* weight*0.5*divphi(iq,0)*divphi(jq,0);
             }
 
         }
@@ -186,15 +177,9 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         TPZFNMatrix<3,REAL> axesvec(3,1,0.);
         datavec[0].axes.Multiply(ivec,axesvec);
 
-
-//        REAL divwq = 0.;
-//        for(int iloc=0; iloc<fDim; iloc++)
-//        {
-//            divwq += axesvec(iloc,0)*dphiQ(iloc,ishapeind);
-//        }
         for (int jp=0; jp<phrp; jp++) {
 
-            REAL fact = (-1.)*weight*phip(jp,0)*divphi(iq,0);//divwq;
+            REAL fact = (-1.)*weight*phip(jp,0)*divphi(iq,0);
             // Matrix B
             ek(iq, phrq+jp) += fact;
 
@@ -205,7 +190,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             //Inserindo termo de estabilizacao: delta1
             if(fIsStabilized==true)
             {
-                //produto -(1/2)gardPu.Qv
+                //produto -(1/2)h^2 gardPu.Qv
                 REAL dotVGradP = 0.;
 
                 for(int k =0; k<fDim; k++)
@@ -213,11 +198,11 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
                     dotVGradP += ivec(k,0)*phiQ(ishapeind,0)*dphiP(k,jp);
                 }
 
-                REAL integration = (-1.)*weight*0.5*dotVGradP;
-//
+                REAL integration = (-0.5)*fh2*weight*dotVGradP;
+
                 // Estabilizacao delta1 na Matrix B
                 ek(iq, phrq+jp) += integration;
-//
+
 //                // Estabilizacao delta1 na Matrix BˆT
                 ek(phrq+jp,iq) += integration;
             }
@@ -245,7 +230,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             {
                 for(int k =0; k<3; k++)
                 {
-                    ek(phrq+ip, phrq+jp) += (-1.)*weight*0.5*dphiPuZ(k,ip)*dphiPXY(k,jp);
+                    ek(phrq+ip, phrq+jp) += (-0.5)*fh2*weight*dphiPuZ(k,ip)*dphiPXY(k,jp);
                 }
 
             }
@@ -447,11 +432,11 @@ void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE>
      datavec[0] Flux
      datavec[1] L2 mesh,
      
-     error[0] - eror em norma L2 para a variavel pressao
-     error[1] - erro em semi norma H1 para a variavel pressao
-     error[2] - erro em norma H1
-     error[3] - eror em norma L2 para a variavel fluxo
-     error[4] - eror em norma L2 para a variavel divergente do fluxo
+     error[0] - eror em norma L2 pressao
+     error[1] - erro em norma L2 flux
+     error[2] - erro em norma L2 div(flux)
+     error[3] - eror em norma L2 grad p
+     error[4] - eror em norma Hdiv
      **/
     
     errors.Resize(NEvalErrors());
@@ -507,10 +492,10 @@ void TPZMixedStabilizedHdiv::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE>
         errogradpressure += (gradpressure[i] - du_exact(i,0))*(gradpressure[i] - du_exact(i,0));
     }
 
-    errors[1] = errogradpressure;
-    errors[2] = errors[0] + errors[1];
+    errors[1] = innerexact;//L2 flux
+    errors[2] = errodivsigma;//L2 div;
     
-    errors[3] = innerexact;//error flux exact
-    errors[4] = errodivsigma; //||div(sigma) - div(sigma_h)||
+    errors[3] = errogradpressure;//L2 grad p
+    errors[4] = innerexact + errodivsigma;//Hdiv norm
 }
 
