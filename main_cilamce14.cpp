@@ -117,7 +117,6 @@ int main(int argc, char *argv[])
     TPZFMatrix<STATE> L2ConvergDivFlux(maxhref-2,maxp-1,0.);
     
     config.vec_errors.Resize(4,0.);
-    config.h_maximo = 0.;
     
     for(int p = 1; p< maxp; p++)
     {
