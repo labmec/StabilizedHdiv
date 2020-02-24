@@ -78,7 +78,7 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh(ProblemConfig &problem);
 
 void RefinamentoUnif(TPZGeoMesh* gmesh, int nDiv);
 void ResolverSistema(TPZAnalysis &an, TPZCompMesh *fCmesh, int numthreads, bool direct);
-void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config);
+void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config, REAL &h_max);
 
 
 void PosProcessMultph(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile);

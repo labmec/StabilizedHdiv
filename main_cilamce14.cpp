@@ -67,7 +67,7 @@ using namespace std;
 //bool IsFullHdiv2 = true;
 //bool IsHomogeneo2 = false;
 
-bool trapezoidalmesh = false;
+bool trapezoidalmesh = true;
 
 
 //#ifdef LOG4CXX
@@ -101,9 +101,11 @@ int main(int argc, char *argv[])
     config.exact.fExact = example.ESinSin;
     config.Iscontinuouspressure = false;
 
-    int maxp = 4;
+    int maxp = 2;
     int maxhref = 6;
 
+    TPZFMatrix<STATE> matrix_hmax(maxhref-1,maxp-1,0.);
+    
     TPZFMatrix<STATE> L2ErrorPressure(maxhref-1,maxp-1,0.);
     TPZFMatrix<STATE> EnergyErrorPressure(maxhref-1,maxp-1,0.);
     TPZFMatrix<STATE> L2ErrorFlux(maxhref-1,maxp-1,0.);
@@ -115,6 +117,7 @@ int main(int argc, char *argv[])
     TPZFMatrix<STATE> L2ConvergDivFlux(maxhref-2,maxp-1,0.);
     
     config.vec_errors.Resize(4,0.);
+    config.h_maximo = 0.;
     
     for(int p = 1; p< maxp; p++)
     {
@@ -192,12 +195,14 @@ int main(int argc, char *argv[])
                 mphysics->Print(arg4);
             }
             
-            SolveStabilizedProblem(mphysics, config);
+            REAL hmaximo;
+            SolveStabilizedProblem(mphysics, config, hmaximo);
             
             L2ErrorPressure(ndiv-1,p-1) = config.vec_errors[0];
             EnergyErrorPressure(ndiv-1,p-1) = config.vec_errors[1];
             L2ErrorFlux(ndiv-1,p-1) = config.vec_errors[2];
             L2ErrorDivFlux(ndiv-1,p-1) = config.vec_errors[3];
+            matrix_hmax(ndiv-1,p-1) = hmaximo;
 
         }
 
@@ -205,10 +210,11 @@ int main(int argc, char *argv[])
 
     for(int j=0; j<maxp-1; j++){
         for(int i=0; i<maxhref-2; i++){
-            L2ConvergPressure(i,j) = log(L2ErrorPressure(i+1,j)/L2ErrorPressure(i,j))/log(1./2.);
-            EnergyConvergPressure(i,j) = log(EnergyErrorPressure(i+1,j)/EnergyErrorPressure(i,j))/log(1./2.);
-            L2ConvergFlux(i,j) = log(L2ErrorFlux(i+1,j)/L2ErrorFlux(i,j))/log(1./2.);
-            L2ConvergDivFlux(i,j) = log(L2ErrorDivFlux(i+1,j)/L2ErrorDivFlux(i,j))/log(1./2.);
+            REAL temp_h = matrix_hmax(i+1,j)/matrix_hmax(i,j);
+            L2ConvergPressure(i,j) = log(L2ErrorPressure(i+1,j)/L2ErrorPressure(i,j))/log(temp_h);
+            EnergyConvergPressure(i,j) = log(EnergyErrorPressure(i+1,j)/EnergyErrorPressure(i,j))/log(temp_h);
+            L2ConvergFlux(i,j) = log(L2ErrorFlux(i+1,j)/L2ErrorFlux(i,j))/log(temp_h);
+            L2ConvergDivFlux(i,j) = log(L2ErrorDivFlux(i+1,j)/L2ErrorDivFlux(i,j))/log(temp_h);
         }
     }
     
@@ -221,6 +227,8 @@ int main(int argc, char *argv[])
     }else{
          errtable <<"RESULTADOS PARA MALHA QUADRILATERAL"<<"\n\n";
     }
+    matrix_hmax.Print("h maximo dos elementos da malha = ",errtable);
+    
     L2ErrorPressure.Print("Error L2 to pressure = ",errtable);
     L2ConvergPressure.Print("Convergence L2 to pressure = ",errtable);
     

@@ -6,7 +6,7 @@
 //
 
 #include "Tools.h"
-#include "pzgengrid.h"
+#include "TPZGenGrid2D.h"
 #include "TPZAnalyticSolution.h"
 #include "TPZMixedStabilizedHdiv.h"
 #include "TPZCompMeshTools.h"
@@ -48,7 +48,7 @@ TPZGeoMesh *CreateGeoMesh(int nel, TPZVec<int> &bcids) {
     TPZManVector<int> nx(2,nel);
     TPZManVector<REAL> x0(3,0.),x1(3,1.);
     x1[2] = 0.;
-    TPZGenGrid gen(nx,x0,x1);
+    TPZGenGrid2D gen(nx,x0,x1);
     gen.SetRefpatternElements(true);
     TPZGeoMesh* gmesh = new TPZGeoMesh;
     gen.Read(gmesh);
@@ -70,7 +70,7 @@ TPZGeoMesh *CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly, TPZVec<i
     nx[1] = nely;
     x1[0] = Lx;
     x1[1] = Ly;
-    TPZGenGrid gengrid(nx,x0,x1);
+    TPZGenGrid2D gengrid(nx,x0,x1);
     
     gengrid.SetDistortion(0.25);
     //        gengrid.SetZigZagPattern();
@@ -1273,7 +1273,7 @@ TPZMultiphysicsCompMesh *CreateHDivMesh(ProblemConfig &problem) {
     return cmesh;
 }
 
-void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
+void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config, REAL &h_max)
 {
     
     TPZAnalysis an(cmesh,false);
@@ -1313,9 +1313,42 @@ void SolveStabilizedProblem(TPZCompMesh *cmesh,const ProblemConfig &config)
     sout << config.dir_name << "/"  "StabProblem_"<<config.problemname<<"OrderP"<< config.orderp<<"OrderQ"<<config.orderq<<"Nref_"<<config.ndivisions<<".vtk";
     
     an.DefineGraphMesh(dim, scalnames, vecnames, sout.str());
-    int resolution=2;
+    int resolution=0;
     an.PostProcess(resolution,dim);
     
+    //Calculo do hmax
+    h_max = 0;
+    REAL h;
+    {
+        int nel = config.gmesh->NElements();
+        TPZVec<REAL> vecH(nel,0);
+        
+        int count=0;
+        for (int64_t iel = 0; iel < nel; iel++) {
+            TPZGeoEl * gel = config.gmesh->Element(iel);
+            
+            if (gel->Dimension() != config.gmesh->Dimension() || gel->HasSubElement() == 1) {
+                continue;
+            }
+            
+            h = gel->CharacteristicSize();
+            
+            //std::cout << "h= " <<h<<std::endl;
+            
+            vecH[count]=h;
+            count ++;
+        }
+        
+        int nvec= vecH.NElements();
+        for(int j=0;j< nvec;j++){
+            if( vecH[j]>h_max){
+                h_max=vecH[j];
+                //  std::cout << "h= " <<h_max<< std::endl;
+                
+            }
+        }
+    }
+        
     if(config.exact.Exact())
     {
         TPZManVector<REAL> errors(5,0.);
@@ -1376,8 +1409,8 @@ TPZMultiphysicsCompMesh *CreateMultiphysicsMesh( ProblemConfig &problem) {
         cmesh->SetDimModel(problem.dimension);
     }
     for (auto matid : problem.bcmaterialids) {
-        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
-        //TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+        //TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
         
         if(matid == -1){
             int bctype = 0;//dirichlet

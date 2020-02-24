@@ -97,7 +97,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         int ishapeind = datavec[0].fVecShapeIndex[iq].second;
         TPZFNMatrix<3,REAL> ivec(3,1,0.);
         for(int id=0; id<3; id++){
-            ivec(id,0) = datavec[0].fNormalVec(id,ivecind);
+            ivec(id,0) = datavec[0].fDeformedDirections(id,ivecind);
         }
         
         //Inserindo termo de estabilizacao no termo de fonte
@@ -123,7 +123,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
             int jshapeind = datavec[0].fVecShapeIndex[jq].second;
             
             for(int id=0; id<3; id++){
-                jvec(id,0) = datavec[0].fNormalVec(id,jvecind);
+                jvec(id,0) = datavec[0].fDeformedDirections(id,jvecind);
             }
             
             //dot product between Kinv[u]v
@@ -178,7 +178,7 @@ void TPZMixedStabilizedHdiv::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         
         TPZFNMatrix<3,REAL> ivec(3,1,0.);
         for(int id=0; id<3; id++){
-            ivec(id,0) = datavec[0].fNormalVec(id,ivecind);
+            ivec(id,0) = datavec[0].fDeformedDirections(id,ivecind);
             //ivec(1,0) = datavec[0].fNormalVec(1,ivecind);
             //ivec(2,0) = datavec[0].fNormalVec(2,ivecind);
         }
