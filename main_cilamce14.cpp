@@ -68,7 +68,7 @@ using namespace std;
 //bool IsHomogeneo2 = false;
 
 bool trapezoidalmesh = true;
-bool problemStab = true;
+bool problemStab = false;
 
 
 //#ifdef LOG4CXX
@@ -120,11 +120,12 @@ int main(int argc, char *argv[])
         config.orderp = p;
         config.orderq = p;
         if(!problemStab){
-            config.hdivmaismais = 1;
+            //config.hdivmaismais = 1;
+            config.hdivmaismais = 0;
         }
 
 
-        for (int ndiv = 1; ndiv <6; ndiv++)
+        for (int ndiv = 1; ndiv <3; ndiv++)
         {
             config.ndivisions = ndiv;
             
